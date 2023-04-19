@@ -48,15 +48,9 @@ function setup(){
 
 function draw(){
     stroke(255, 255, 255);
-    fill(94,93,92)
-    rectMode(CENTER);
-    rect(windowWidth/2, windowHeight/2, width/5, width/5)
+    drawRect();
     noStroke();   
-    textSize(50);
-    textFont(sevenSegment);
-    textAlign(CENTER);
-    fill(208, 9, 235);
-    text("$soundsofwallstreet", windowWidth/2, (windowHeight/6)) //replace with seven segment style font
+    drawText();
     getSoundFromValues();
     if (playing) {
         // smooth the transitions by 0.1 seconds
@@ -90,4 +84,18 @@ function stockGraph(){
     for(let i =0; i < gmeValues.length; i++){
         xPos[i]= constrain(map(gmeValues[i], 10, 50, (windowHeight/2-175), (windowHeight/2+175)), (windowHeight/2-175), (windowHeight/2+175));
     }
+}
+
+function drawText(){
+    textSize(50);
+    textFont(sevenSegment);
+    textAlign(CENTER);
+    fill(208, 9, 235);
+    text("$soundsofwallstreet", windowWidth/2, (windowHeight/6))
+}
+
+function drawRect(){
+    fill(94,93,92)
+    rectMode(CENTER);
+    rect(windowWidth/2, windowHeight/2, width/5, width/5)
 }
