@@ -3,10 +3,9 @@
  * each stock can relate to a different range of notes, custimiziable colors
  * stock lines are green when trending up and red when trending down, just for those segmenats
  * 
- * add time based open/closing bell events, during downtime maybe play lofi hip hop or something?
+ * use dat gui for user controls
  * 
- * when no stocks are selected or active, cycle through a few gifs like bell ringing, wolf of wallstreet,
- * etc.
+ * interface with excel spreadsheet
  */
 
 let gmeValues = [42, 37.752499, 38.5275, 37.272499, 35.759998, 36.625, 36.025002, 37.317501, 37.5, 35.712502, 
