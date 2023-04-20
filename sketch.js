@@ -55,22 +55,23 @@ function setup(){
     stockGraph(gmeValues);
     background(0);
     frameRate(15);
+    getSizeFromNum();
     for(let i = 0; i < layout.numStocks; i++) {
         let ticker = 'gme';
         stocks[i] = new Stock(ticker, i);
     }
-    getSizeFromNum();
+    rectMode(CENTER);
 }
 
 function draw(){
-    stroke(255, 255, 255);
+    stroke(255, 255, 255);/*
     drawRect();
     noStroke();   
     drawText();
     getSoundFromValues(gmeValues);
     if (playing) {
         // smooth the transitions by 0.1 seconds
-        osc.freq(freq, 0.1);
+        osc.freq(freq, 0);
         osc.amp(amp, 0.1);
     }
     xIndex = frameCount%xPos.length;
@@ -92,8 +93,11 @@ function draw(){
             stroke(255,0,0);
         }
         line(yPosition-((i-1)*10),xPos[(xIndex-(i-1))%xPos.length], yPosition-(i*10), xPos[(xIndex-i)%xPos.length]);
-    }
-   stocks[0].display();
+    }*/
+    noStroke();
+    drawText();
+    stocks[0].display();
+    stocks[0].noise();
 }
 
 //initialize noise
@@ -106,7 +110,7 @@ function startOscillator() {
 //add func for nicer sound ranges
 function getSoundFromValues(values){
     soundVal= values[frameCount%values.length];
-    freq = constrain(map(soundVal, 10, 50, 100, 500), 100, 500);
+    freq = diatonic[map(soundVal, 10, 50, 0, diatonic.length)];
     amp = constrain(map(soundVal, 10, 50, 0, 1), 0, 1);
 }
 
@@ -136,15 +140,6 @@ function drawText(){
     }
     playing != playing; //this is buggy
 }*/
-
-
-//probably will be depreciated with class functionality
-function drawRect(){
-    fill(94,93,92)
-    rectMode(CENTER);
-    rect(windowWidth/2, windowHeight/2, stockWidth, stockHeight)
-}
-
 
 //used to find grid arrangement for stock array based on number of stocks
 function getSizeFromNum(){
@@ -180,26 +175,61 @@ function getSizeFromNum(){
         stockWidth = width/5;
         stockHeight = width/5;
     }
+    console.log(stockCenter);
 }
 
 
 //class currently not in use, current refactor underway
 class Stock {
     constructor(ticker, index){
-        this.ticker = ticker;
-        this.frameX = 0;
-        this.frameY = 0;
-        this.width = 400;
-        this.height = 400;
-        this.values = gmeValues;
         this.index = index;
+        this.ticker = ticker;
+        this.frameX = stockCenter[index*2];
+        this.frameY = stockCenter[(index*2)+1];
+        this.width = stockWidth;
+        this.height = stockHeight
+        this.values = gmeValues; //this will be replaced to be from a file
+        this.stockOsc = new p5.Oscillator('sine'); //this might actually work ayo?
     }
 
     display(){
-        fill(94,93,92)
+        /*fill(94,93,92)
         rectMode(CENTER);
         //console.log(stockCenter[index*2], stockCenter[(index*2)+1], stockWidth, stockHeight)
         rect(stockCenter[index*2], stockCenter[(index*2)+1], stockWidth, stockHeight)
-        getSoundFromValues(this.values)
+        getSoundFromValues(this.values)*/
+
+
+        //test dump, old draw function now here, need to change to oop style -> not opp like the rap (other people's programs haha)
+        fill(94,93,92)
+        rect(windowWidth/2, windowHeight/2, stockWidth, stockHeight)
+        xIndex = frameCount%xPos.length;
+        xPosition = xPos[xIndex];
+        fill(8, 204, 34);
+        circle(yPosition, xPosition, 5);
+        stockGraph(this.values);
+        if(xPos[xIndex] > xPos[xIndex-1]){
+            stroke(0,255,0);
+        } else {
+            stroke(255,0,0);
+        }
+        //stroke(8, 204, 34);
+        line(yPosition,xPosition, yPosition-10, xPos[xIndex-1]); 
+        for(let i = 2; i < 13; i++){
+            if(xPos[xIndex-i] > xPos[xIndex-(i-1)]){
+                stroke(0,255,0);
+            } else {
+                stroke(255,0,0);
+            }
+            line(yPosition-((i-1)*10),xPos[(xIndex-(i-1))%xPos.length], yPosition-(i*10), xPos[(xIndex-i)%xPos.length]);
+        }
+    }
+
+    noise(){
+        getSoundFromValues(this.values);
+        if (playing) {
+            osc.freq(freq, 0);
+            osc.amp(amp, 0);
+        }
     }
 }
