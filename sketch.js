@@ -84,14 +84,14 @@ function draw(){
         stroke(255,0,0);
     }
     //stroke(8, 204, 34);
-    line(yPosition,xPosition, yPosition-1, xPos[xIndex-1]);
-    for(let i =2; i < 13; i++){
-        line(yPosition-((i-1)*10),xPos[(xIndex-(i-1))%xPos.length], yPosition-(i*10), xPos[(xIndex-i)%xPos.length]);
+    line(yPosition,xPosition, yPosition-10, xPos[xIndex-1]); 
+    for(let i = 2; i < 13; i++){
         if(xPos[xIndex-i] > xPos[xIndex-(i-1)]){
             stroke(0,255,0);
         } else {
             stroke(255,0,0);
         }
+        line(yPosition-((i-1)*10),xPos[(xIndex-(i-1))%xPos.length], yPosition-(i*10), xPos[(xIndex-i)%xPos.length]);
     }
    stocks[0].display();
 }
@@ -128,14 +128,14 @@ function drawText(){
 
 
 //supposed to toggle sound, untested
-function mousePressed(){
+/*function mousePressed(){
     if(!playing){
         osc.start();
     } else {
         osc.stop();
     }
     playing != playing; //this is buggy
-}
+}*/
 
 
 //probably will be depreciated with class functionality
