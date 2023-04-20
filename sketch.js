@@ -20,16 +20,28 @@ let gmeValues = [42, 37.752499, 38.5275, 37.272499, 35.759998, 36.625, 36.025002
     25, 26.299999, 29.030001, 27.4, 27.559999, 27.860001, 28.33, 28.34, 29.280001, 27.450001, 27.17, 24.15, 24.66, 
     25.469999, 25.889999, 27.08, 25.030001, 25.139999, 25.950001, 26.77, 26.290001, 25.84, 25.370001, 24.870001, 
     25.959999, 24.42, 25.77, 25.370001, 27.1, 26, 24.65, 24.15, 25, 24.82, 26.370001, 25.75];
-let soundVal;
-let playing;
-let xPosition;
-let yPosition;
-let xPos = [];
-let xIndex;
+let diatonic = [27.50,30.87,32.70,36.71,41.20,43.65,49.00,55.00,61.74,65.41,73.42,82.41,87.31,98.00,110.00,
+    123.47,130.81,146.83,164.81,174.61,196.00,220.00,246.94,261.63,293.66,329.63,349.23,392.00,440.00,493.88,
+    523.25,587.33,659.25,698.46,783.99,880.00,987.77,1046.50];
+let stocks = [];
+let stockCenter;
+let soundVal; //prob obj values
+let playing, stockWidth, stockHeight;
+let green = '(0,255,0)';
+let red = '(255, 0, 0)';
+let xPosition; //prob obj values
+let yPosition; //prob obj values
+let xPos = []; //prob obj values
+let xIndex; //prob obj values
+let index;
+let title = '$soundsofwallstreet';
+let layout = {
+    numStocks: 2, //turn this into an int
+    title: '$soundsofwallstreet'
+}
 let gui = new dat.GUI();
-gui.add(circ, 'width', 0, 400);
-gui.add(circ, 'height', 0, 400);
-gui.add(circ, 'alpha', 0, 255);
+gui.add(layout, 'numStocks', 1, 9);
+gui.add(layout, 'title');
 
 function preload(){
     sevenSegment = loadFont('fonts/Seven Segment.ttf');
@@ -38,11 +50,16 @@ function preload(){
 function setup(){
     canvas = createCanvas(windowWidth, windowHeight);
     yPosition = windowWidth/2
-    canvas.mousePressed(playOscillator);
+    canvas.mousePressed(startOscillator);
     osc = new p5.Oscillator('sine');
-    stockGraph();
+    stockGraph(gmeValues);
     background(0);
     frameRate(15);
+    for(let i = 0; i < layout.numStocks; i++) {
+        let ticker = 'gme';
+        stocks[i] = new Stock(ticker, i);
+    }
+    getSizeFromNum();
 }
 
 function draw(){
@@ -50,7 +67,7 @@ function draw(){
     drawRect();
     noStroke();   
     drawText();
-    getSoundFromValues();
+    getSoundFromValues(gmeValues);
     if (playing) {
         // smooth the transitions by 0.1 seconds
         osc.freq(freq, 0.1);
@@ -60,41 +77,129 @@ function draw(){
     xPosition = xPos[xIndex];
     fill(8, 204, 34);
     circle(yPosition, xPosition, 5);
-    stockGraph(frameCount-1);
-    stroke(8, 204, 34);
+    stockGraph(gmeValues);
+    if(xPos[xIndex] > xPos[xIndex-1]){
+        stroke(0,255,0);
+    } else {
+        stroke(255,0,0);
+    }
+    //stroke(8, 204, 34);
     line(yPosition,xPosition, yPosition-1, xPos[xIndex-1]);
     for(let i =2; i < 13; i++){
         line(yPosition-((i-1)*10),xPos[(xIndex-(i-1))%xPos.length], yPosition-(i*10), xPos[(xIndex-i)%xPos.length]);
+        if(xPos[xIndex-i] > xPos[xIndex-(i-1)]){
+            stroke(0,255,0);
+        } else {
+            stroke(255,0,0);
+        }
     }
+   stocks[0].display();
 }
 
-function playOscillator() {
+//initialize noise
+function startOscillator() {
     osc.start();
     playing = true;
 }
 
-function getSoundFromValues(){
-    soundVal= gmeValues[frameCount%gmeValues.length];
+//takes values and turns them into sounds, needs refactor to support class functionality
+//add func for nicer sound ranges
+function getSoundFromValues(values){
+    soundVal= values[frameCount%values.length];
     freq = constrain(map(soundVal, 10, 50, 100, 500), 100, 500);
     amp = constrain(map(soundVal, 10, 50, 0, 1), 0, 1);
 }
 
-function stockGraph(){
-    for(let i =0; i < gmeValues.length; i++){
-        xPos[i]= constrain(map(gmeValues[i], 10, 50, (windowHeight/2-175), (windowHeight/2+175)), (windowHeight/2-175), (windowHeight/2+175));
+//takes values and turns them into lines, needs refactor to support class functionality
+function stockGraph(values){
+    for(let i =0; i < values.length; i++){
+        xPos[i]= constrain(map(values[i], 10, 50, (windowHeight/2-175), (windowHeight/2+175)), (windowHeight/2-175), (windowHeight/2+175));
     }
 }
 
+//here to avoid bloat in draw function, might be adapted for stock labels
 function drawText(){
     textSize(50);
     textFont(sevenSegment);
     textAlign(CENTER);
     fill(208, 9, 235);
-    text("$soundsofwallstreet", windowWidth/2, (windowHeight/6))
+    text(layout.title, windowWidth/2, (windowHeight/6))
 }
 
+
+//supposed to toggle sound, untested
+function mousePressed(){
+    if(!playing){
+        osc.start();
+    } else {
+        osc.stop();
+    }
+    playing != playing; //this is buggy
+}
+
+
+//probably will be depreciated with class functionality
 function drawRect(){
     fill(94,93,92)
     rectMode(CENTER);
-    rect(windowWidth/2, windowHeight/2, width/5, width/5)
+    rect(windowWidth/2, windowHeight/2, stockWidth, stockHeight)
+}
+
+
+//used to find grid arrangement for stock array based on number of stocks
+function getSizeFromNum(){
+    if(layout.numStocks == 1){ // look at mod math and patterns for more concise code
+        stockWidth = width/5;
+        stockHeight = width/5;
+        stockCenter = [windowWidth/2, windowHeight/2];
+    } else if(layout.numStocks == 2){
+        stockWidth = width/5;
+        stockHeight = width/5;
+        stockCenter = [windowWidth/4, windowHeight/2, (windowWidth/4)*3, windowHeight/2];
+    } else if(layout.numStocks == 3){
+        stockWidth = width/5;
+        stockHeight = width/5;
+        stockCenter = [windowWidth/6, windowHeight/2, (windowWidth/6)*2, windowHeight/2, 
+                        (windowWidth/6)*4, windowHeight/2];
+    } else if(layout.numStocks == 4){
+        stockWidth = width/5;
+        stockHeight = width/5;
+    } else if(layout.numStocks == 5){
+        stockWidth = width/5;
+        stockHeight = width/5;
+    } else if(layout.numStocks == 6){
+        stockWidth = width/5;
+        stockHeight = width/5;
+    } else if(layout.numStocks == 7){
+        stockWidth = width/5;
+        stockHeight = width/5;
+    } else if(layout.numStocks == 8){
+        stockWidth = width/5;
+        stockHeight = width/5;
+    } else if(layout.numStocks == 9){
+        stockWidth = width/5;
+        stockHeight = width/5;
+    }
+}
+
+
+//class currently not in use, current refactor underway
+class Stock {
+    constructor(ticker, index){
+        this.ticker = ticker;
+        this.frameX = 0;
+        this.frameY = 0;
+        this.width = 400;
+        this.height = 400;
+        this.values = gmeValues;
+        this.index = index;
+    }
+
+    display(){
+        fill(94,93,92)
+        rectMode(CENTER);
+        //console.log(stockCenter[index*2], stockCenter[(index*2)+1], stockWidth, stockHeight)
+        rect(stockCenter[index*2], stockCenter[(index*2)+1], stockWidth, stockHeight)
+        getSoundFromValues(this.values)
+    }
 }
