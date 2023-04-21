@@ -20,6 +20,7 @@ let gmeValues = [42, 37.752499, 38.5275, 37.272499, 35.759998, 36.625, 36.025002
     25, 26.299999, 29.030001, 27.4, 27.559999, 27.860001, 28.33, 28.34, 29.280001, 27.450001, 27.17, 24.15, 24.66, 
     25.469999, 25.889999, 27.08, 25.030001, 25.139999, 25.950001, 26.77, 26.290001, 25.84, 25.370001, 24.870001, 
     25.959999, 24.42, 25.77, 25.370001, 27.1, 26, 24.65, 24.15, 25, 24.82, 26.370001, 25.75];
+
 let diatonic = [27.50,30.87,32.70,36.71,41.20,43.65,49.00,55.00,61.74,65.41,73.42,82.41,87.31,98.00,110.00,
     123.47,130.81,146.83,164.81,174.61,196.00,220.00,246.94,261.63,293.66,329.63,349.23,392.00,440.00,493.88,
     523.25,587.33,659.25,698.46,783.99,880.00,987.77,1046.50];
@@ -27,15 +28,8 @@ let stocks = [];
 let stockCenter;
 let soundVal; //prob obj values
 let playing, stockWidth, stockHeight;
-let green = '(0,255,0)';
-let red = '(255, 0, 0)';
-let xPosition; //prob obj values
-let yPosition; //prob obj values
-let xPos = []; //prob obj values
-let xIndex; //prob obj values
-let index;
 let title = '$soundsofwallstreet';
-let layout = {
+let layout = {      //include more for ui
     numStocks: 2, //turn this into an int
     title: '$soundsofwallstreet'
 }
@@ -43,6 +37,7 @@ let gui = new dat.GUI();
 gui.add(layout, 'numStocks', 1, 9);
 gui.add(layout, 'title');
 
+//things that happen before the page can render, include file reading for stock data here
 function preload(){
     sevenSegment = loadFont('fonts/Seven Segment.ttf');
 }
@@ -52,7 +47,6 @@ function setup(){
     yPosition = windowWidth/2
     canvas.mousePressed(startOscillator);
     osc = new p5.Oscillator('sine');
-    stockGraph(gmeValues);
     background(0);
     frameRate(15);
     getSizeFromNum();
@@ -64,40 +58,13 @@ function setup(){
 }
 
 function draw(){
-    stroke(255, 255, 255);/*
-    drawRect();
-    noStroke();   
-    drawText();
-    getSoundFromValues(gmeValues);
-    if (playing) {
-        // smooth the transitions by 0.1 seconds
-        osc.freq(freq, 0);
-        osc.amp(amp, 0.1);
-    }
-    xIndex = frameCount%xPos.length;
-    xPosition = xPos[xIndex];
-    fill(8, 204, 34);
-    circle(yPosition, xPosition, 5);
-    stockGraph(gmeValues);
-    if(xPos[xIndex] > xPos[xIndex-1]){
-        stroke(0,255,0);
-    } else {
-        stroke(255,0,0);
-    }
-    //stroke(8, 204, 34);
-    line(yPosition,xPosition, yPosition-10, xPos[xIndex-1]); 
-    for(let i = 2; i < 13; i++){
-        if(xPos[xIndex-i] > xPos[xIndex-(i-1)]){
-            stroke(0,255,0);
-        } else {
-            stroke(255,0,0);
-        }
-        line(yPosition-((i-1)*10),xPos[(xIndex-(i-1))%xPos.length], yPosition-(i*10), xPos[(xIndex-i)%xPos.length]);
-    }*/
+    stroke(255, 255, 255);
     noStroke();
     drawText();
-    stocks[0].display();
-    stocks[0].noise();
+    for(let i = 0; i<stocks.length; i++){
+        stocks[i].display();
+        stocks[i].noise();
+    }
 }
 
 //initialize noise
@@ -116,9 +83,11 @@ function getSoundFromValues(values){
 
 //takes values and turns them into lines, needs refactor to support class functionality
 function stockGraph(values){
+    let array = [];
     for(let i =0; i < values.length; i++){
-        xPos[i]= constrain(map(values[i], 10, 50, (windowHeight/2-175), (windowHeight/2+175)), (windowHeight/2-175), (windowHeight/2+175));
+        array[i]= constrain(map(values[i], 10, 50, (windowHeight/2-175), (windowHeight/2+175)), (windowHeight/2-175), (windowHeight/2+175));
     }
+    return array;
 }
 
 //here to avoid bloat in draw function, might be adapted for stock labels
@@ -159,27 +128,37 @@ function getSizeFromNum(){
     } else if(layout.numStocks == 4){
         stockWidth = width/5;
         stockHeight = width/5;
+        stockCenter =[windowWidth/4, windowHeight/4, (windowWidth/4)*3, windowHeight/4,
+                        (windowWidth/4)*3, (windowHeight/4)*3];
     } else if(layout.numStocks == 5){
         stockWidth = width/5;
         stockHeight = width/5;
+        stockCenter =[windowWidth/4, windowHeight/4, (windowWidth/4)*3, windowHeight/4,
+                        (windowWidth/4)*3, (windowHeight/4)*3]; //this is wrong
     } else if(layout.numStocks == 6){
         stockWidth = width/5;
         stockHeight = width/5;
+        stockCenter =[windowWidth/4, windowHeight/4, (windowWidth/4)*3, windowHeight/4,
+                        (windowWidth/4)*3, (windowHeight/4)*3]; //this is wrong
     } else if(layout.numStocks == 7){
         stockWidth = width/5;
         stockHeight = width/5;
+        stockCenter =[windowWidth/4, windowHeight/4, (windowWidth/4)*3, windowHeight/4,
+                        (windowWidth/4)*3, (windowHeight/4)*3]; //this is wrong
     } else if(layout.numStocks == 8){
         stockWidth = width/5;
         stockHeight = width/5;
+        stockCenter =[windowWidth/4, windowHeight/4, (windowWidth/4)*3, windowHeight/4,
+                        (windowWidth/4)*3, (windowHeight/4)*3]; //this is wrong
     } else if(layout.numStocks == 9){
         stockWidth = width/5;
         stockHeight = width/5;
+        stockCenter =[windowWidth/4, windowHeight/4, (windowWidth/4)*3, windowHeight/4,
+                        (windowWidth/4)*3, (windowHeight/4)*3]; //this is wrong
     }
-    console.log(stockCenter);
+    console.log("stock center: " + stockCenter);
 }
 
-
-//class currently not in use, current refactor underway
 class Stock {
     constructor(ticker, index){
         this.index = index;
@@ -188,41 +167,39 @@ class Stock {
         this.frameY = stockCenter[(index*2)+1];
         this.width = stockWidth;
         this.height = stockHeight
-        this.values = gmeValues; //this will be replaced to be from a file
+        this.values = gmeValues;
         this.stockOsc = new p5.Oscillator('sine'); //this might actually work ayo?
+        this.stockArrayIndex = 0;
+        this.graphPosition = stockGraph(this.values);
+        this.xPosition = 0;
     }
 
     display(){
-        /*fill(94,93,92)
-        rectMode(CENTER);
-        //console.log(stockCenter[index*2], stockCenter[(index*2)+1], stockWidth, stockHeight)
-        rect(stockCenter[index*2], stockCenter[(index*2)+1], stockWidth, stockHeight)
-        getSoundFromValues(this.values)*/
-
-
-        //test dump, old draw function now here, need to change to oop style -> not opp like the rap (other people's programs haha)
         fill(94,93,92)
-        rect(windowWidth/2, windowHeight/2, stockWidth, stockHeight)
-        xIndex = frameCount%xPos.length;
-        xPosition = xPos[xIndex];
-        fill(8, 204, 34);
-        circle(yPosition, xPosition, 5);
-        stockGraph(this.values);
-        if(xPos[xIndex] > xPos[xIndex-1]){
+        rect(stockCenter[this.index*2], stockCenter[(this.index*2)+1], stockWidth,stockHeight)
+        this.stockArrayIndex = frameCount%this.graphPosition.length; 
+        this.xPosition = this.graphPosition[this.stockArrayIndex]; 
+        if(this.graphPosition[this.stockArrayIndex] > this.graphPosition[this.stockArrayIndex-1]){ 
+            fill(0,255,0);
+        } else {
+            fill(255,0,0);
+        }
+        circle(stockCenter[this.index*2], this.xPosition, 5); 
+        if(this.graphPosition[this.stockArrayIndex] > this.graphPosition[this.stockArrayIndex-1]){ 
             stroke(0,255,0);
         } else {
             stroke(255,0,0);
         }
-        //stroke(8, 204, 34);
-        line(yPosition,xPosition, yPosition-10, xPos[xIndex-1]); 
+        line(stockCenter[this.index*2],this.xPosition, stockCenter[this.index*2]-10, this.graphPosition[this.stockArrayIndex-1]); 
         for(let i = 2; i < 13; i++){
-            if(xPos[xIndex-i] > xPos[xIndex-(i-1)]){
+            if(this.graphPosition[this.stockArrayIndex-i] > this.graphPosition[this.stockArrayIndex-(i-1)]){ 
                 stroke(0,255,0);
             } else {
                 stroke(255,0,0);
             }
-            line(yPosition-((i-1)*10),xPos[(xIndex-(i-1))%xPos.length], yPosition-(i*10), xPos[(xIndex-i)%xPos.length]);
-        }
+            line(stockCenter[this.index*2]-((i-1)*10),this.graphPosition[(this.stockArrayIndex-(i-1))%this.graphPosition.length], stockCenter[this.index*2]-(i*10), this.graphPosition[(this.stockArrayIndex-i)%this.graphPosition.length]);
+        } 
+        noStroke();
     }
 
     noise(){
