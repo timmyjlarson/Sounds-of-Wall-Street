@@ -41,7 +41,8 @@ gui.add(layout, 'title');
 //things that happen before the page can render, include file reading for stock data here
 function preload(){
     sevenSegment = loadFont('fonts/Seven Segment.ttf');
-    stockData = loadTable('stocks/stockData.xlsx', 'xlsx', 'header');
+    stockData = loadTable('stocks/stockData.xlsx', 'xlsx', 'header'); //read in the whole sheet
+    console.log(stockData); //this also shows only one column
 }
 
 function setup(){
@@ -169,11 +170,11 @@ class Stock {
         this.frameY = stockCenter[(index*2)+1];
         this.width = stockWidth;
         this.height = stockHeight
-        this.stockOsc = new p5.Oscillator('sine'); //this might actually work ayo?
+        this.stockOsc = new p5.Oscillator('sine'); 
         this.stockArrayIndex = 0;
         this.xPosition = 0;
         this.values = gmeValues;
-        this.values = stockData.getColumn(stockData.columns[1]);
+        this.values = stockData.getColumn(stockData.columns[1]); //here is where the columns are read in
         console.log(this.values);
         this.graphPosition = stockGraph(this.values);
     }
