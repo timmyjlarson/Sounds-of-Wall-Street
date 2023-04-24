@@ -25,6 +25,7 @@ let diatonic = [27.50,30.87,32.70,36.71,41.20,43.65,49.00,55.00,61.74,65.41,73.4
     123.47,130.81,146.83,164.81,174.61,196.00,220.00,246.94,261.63,293.66,329.63,349.23,392.00,440.00,493.88,
     523.25,587.33,659.25,698.46,783.99,880.00,987.77,1046.50];
 let stocks = [];
+let stockData = [];
 let stockCenter;
 let soundVal; //prob obj values
 let playing, stockWidth, stockHeight;
@@ -40,6 +41,7 @@ gui.add(layout, 'title');
 //things that happen before the page can render, include file reading for stock data here
 function preload(){
     sevenSegment = loadFont('fonts/Seven Segment.ttf');
+    stockData = loadTable('stocks/stockData.xlsx', 'xlsx', 'header');
 }
 
 function setup(){
@@ -167,11 +169,13 @@ class Stock {
         this.frameY = stockCenter[(index*2)+1];
         this.width = stockWidth;
         this.height = stockHeight
-        this.values = gmeValues;
         this.stockOsc = new p5.Oscillator('sine'); //this might actually work ayo?
         this.stockArrayIndex = 0;
-        this.graphPosition = stockGraph(this.values);
         this.xPosition = 0;
+        this.values = gmeValues;
+        this.values = stockData.getColumn(stockData.columns[1]);
+        console.log(this.values);
+        this.graphPosition = stockGraph(this.values);
     }
 
     display(){
@@ -191,7 +195,8 @@ class Stock {
             stroke(255,0,0);
         }
         line(stockCenter[this.index*2],this.xPosition, stockCenter[this.index*2]-10, this.graphPosition[this.stockArrayIndex-1]); 
-        for(let i = 2; i < 13; i++){
+        let endLine = floor(stockWidth/10)/2;
+        for(let i = 2; i < endLine; i++){
             if(this.graphPosition[this.stockArrayIndex-i] > this.graphPosition[this.stockArrayIndex-(i-1)]){ 
                 stroke(0,255,0);
             } else {
