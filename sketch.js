@@ -7,21 +7,23 @@
  * 
  * interface with excel spreadsheet
  */
-
+let waveform = ["sine", "sawtooth", "triangle", "square"];
 let diatonic = [27.50,30.87,32.70,36.71,41.20,43.65,49.00,55.00,61.74,65.41,73.42,82.41,87.31,98.00,110.00,
     123.47,130.81,146.83,164.81,174.61,196.00,220.00,246.94,261.63,293.66,329.63,349.23,392.00,440.00,493.88,
     523.25,587.33,659.25,698.46,783.99,880.00,987.77,1046.50];
+let bpm = 140;
+let playing, reverb;
+
 let stocks = [];
 let stockData = [[],[]];
-let stockCenter;
-let soundVal; //prob obj values
-let playing, stockWidth, stockHeight;
+let stockCenter = [];
+let stockWidth, stockHeight;
 let title = '$soundsofwallstreet';
 let layout = {      //include more for ui
     numStocks: 2, //turn this into an int
     title: '$soundsofwallstreet'
 }
-let tickers = ['$GME', '$AMC'];
+let tickers = ['$GME', '$AMC']; //currently hardcoded, may be able to fix?
 let gui = new dat.GUI();
 gui.add(layout, 'numStocks', 1, 9);
 gui.add(layout, 'title');
@@ -41,7 +43,7 @@ function setup(){
     canvas.mousePressed(startOscillator);
     osc = new p5.Oscillator('sine');
     background(0);
-    frameRate(15);
+    frameRate(10);
     getSizeFromNum();
     for(let i = 0; i < layout.numStocks; i++) {
         //let ticker = stockData[0][i*4];
@@ -49,6 +51,11 @@ function setup(){
         stocks[i] = new Stock(ticker, i);
     }
     rectMode(CENTER);
+
+    //sound stuff
+    beatDur = round(6000 / bpm / 8);
+    reverb = new p5.Reverb();
+    reverb.set(5,0,false);
 }
 
 function draw(){
@@ -78,7 +85,7 @@ function getSoundFromValues(values){
 function stockGraph(values, index){ //change to be called by class, access class index
     let array = [];
     for(let i =0; i < values.length; i++){ //fix to something like stockCenter/2 + stockHeight + 2
-        array[i]= constrain(map(values[i], Math.min(...values), Math.max(...values), (stockCenter[(index*2)+1])-stockHeight/2, (stockCenter[(index*2)+1])+stockHeight/2), (stockCenter[(index*2)+1])-stockHeight/2, (stockCenter[(index*2)+1])+stockHeight/2);
+        array[i]= constrain(map(values[i], Math.min(...values) *.8, Math.max(...values) * 1.2, (stockCenter[(index*2)+1])-stockHeight/2, (stockCenter[(index*2)+1])+stockHeight/2), (stockCenter[(index*2)+1])-stockHeight/2, (stockCenter[(index*2)+1])+stockHeight/2);
     }   //triple period compares all values in array. probably dogshit for time complexity, but simple to implement
     return array;
 }
@@ -91,17 +98,6 @@ function drawText(){
     fill(208, 9, 235);
     text(layout.title, windowWidth/2, (windowHeight/6))
 }
-
-
-//supposed to toggle sound, untested
-/*function mousePressed(){
-    if(!playing){
-        osc.start();
-    } else {
-        osc.stop();
-    }
-    playing != playing; //this is buggy
-}*/
 
 //used to find grid arrangement for stock array based on number of stocks
 function getSizeFromNum(){
@@ -150,6 +146,35 @@ function getSizeFromNum(){
                         (windowWidth/4)*3, (windowHeight/4)*3]; //this is wrong
     }
 }
+
+//from step sequencer example, mopdify to use stock values as input for height
+function playNotes(l) {
+    osc[l].start();
+    osc[l].freq(scale[l], 0);
+    osc[l].amp(1, 0);
+    osc[l].amp(0, 0.25);
+}
+
+//from step sequencer example, mopdify to use stock values as input for height
+function keyPressed() {
+    if (key === ' ') {
+      playing = !playing;
+    }
+    if (key === 'r') {
+      rev = !rev;
+      if (rev) {
+        for (let i = 0; i < layers; i++) {
+          osc[i].connect(reverb);
+        }        
+      }
+      else {
+        for (let i = 0; i < layers; i++) {
+          osc[i].disconnect(reverb);
+          osc[i].connect(soundOut);
+        }
+      }
+    }
+  }
 
 class Stock {
     constructor(ticker, index){
