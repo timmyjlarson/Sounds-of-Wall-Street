@@ -75,10 +75,10 @@ function getSoundFromValues(values){
     amp = constrain(map(soundVal, 10, 50, 0, 1), 0, 1);
 }
 
-function stockGraph(values){
+function stockGraph(values, index){ //change to be called by class, access class index
     let array = [];
     for(let i =0; i < values.length; i++){ //fix to something like stockCenter/2 + stockHeight + 2
-        array[i]= constrain(map(values[i], Math.min(...values), Math.max(...values), (windowHeight/2-175), (windowHeight/2+175)), (windowHeight/2-175), (windowHeight/2+175));
+        array[i]= constrain(map(values[i], Math.min(...values), Math.max(...values), (stockCenter[(index*2)+1])-stockHeight/2, (stockCenter[(index*2)+1])+stockHeight/2), (stockCenter[(index*2)+1])-stockHeight/2, (stockCenter[(index*2)+1])+stockHeight/2);
     }   //triple period compares all values in array. probably dogshit for time complexity, but simple to implement
     return array;
 }
@@ -156,7 +156,7 @@ class Stock {
         this.index = index;
         this.ticker = ticker;
         this.frameX = stockCenter[index*2];
-        this.frameY = stockCenter[(index*2)+1];
+        this.frameY = stockCenter[(index*2)+1]; //these don't work
         this.width = stockWidth;
         this.height = stockHeight
         this.stockOsc = new p5.Oscillator('sine'); 
@@ -164,8 +164,8 @@ class Stock {
         this.xPosition = 0;
         //this.values = gmeValues;
         this.values = stockData.getColumn(stockData.columns[index * 2]); //here is where the columns are read in
-        console.log("values for stock number " + index + ": " + this.values);
-        this.graphPosition = stockGraph(this.values);
+        //console.log("values for stock number " + index + ": " + this.values);
+        this.graphPosition = stockGraph(this.values, this.index);
     }
 
     display(){
@@ -193,13 +193,13 @@ class Stock {
                 stroke(255,0,0);
             }
             line(stockCenter[this.index*2]-((i-1)*10),this.graphPosition[(this.stockArrayIndex-(i-1))%this.graphPosition.length], stockCenter[this.index*2]-(i*10), this.graphPosition[(this.stockArrayIndex-i)%this.graphPosition.length]);
-        } 
+        } //add mod math here to make sure the loop back is more fluid
         noStroke();
         textSize(40);
         textFont(sevenSegment);
         textAlign(CENTER);
         fill(208, 9, 235);
-        text(this.ticker, this.frameY, this.frameX-(this.frameX*.5)); 
+        text(this.ticker, stockCenter[(this.index*2)], stockCenter[(this.index*2)+1]+(stockCenter[(this.index*2)+1]*.6)); 
     }
 
     noise(){
