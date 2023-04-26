@@ -25,7 +25,7 @@ let diatonic = [27.50,30.87,32.70,36.71,41.20,43.65,49.00,55.00,61.74,65.41,73.4
     123.47,130.81,146.83,164.81,174.61,196.00,220.00,246.94,261.63,293.66,329.63,349.23,392.00,440.00,493.88,
     523.25,587.33,659.25,698.46,783.99,880.00,987.77,1046.50];
 let stocks = [];
-let stockData = [];
+let stockData = [[],[]];
 let stockCenter;
 let soundVal; //prob obj values
 let playing, stockWidth, stockHeight;
@@ -41,7 +41,8 @@ gui.add(layout, 'title');
 //things that happen before the page can render, include file reading for stock data here
 function preload(){
     sevenSegment = loadFont('fonts/Seven Segment.ttf');
-    stockData = loadTable('stocks/stockData.xlsx', 'xlsx', 'header'); //read in the whole sheet
+    stockData = loadTable('stocks/stockData.csv', 'csv', 'header'); //read in the whole sheet
+    //need to update xlsx manually and then convert to csv, pending more elegant solution
     console.log(stockData); //this also shows only one column
 }
 
@@ -54,7 +55,9 @@ function setup(){
     frameRate(15);
     getSizeFromNum();
     for(let i = 0; i < layout.numStocks; i++) {
-        let ticker = 'gme';
+        //console.log(stockData.getIndex);
+        //let ticker = stockData[0][i*4];
+        let ticker = "fix this";
         stocks[i] = new Stock(ticker, i);
     }
     rectMode(CENTER);
@@ -159,7 +162,6 @@ function getSizeFromNum(){
         stockCenter =[windowWidth/4, windowHeight/4, (windowWidth/4)*3, windowHeight/4,
                         (windowWidth/4)*3, (windowHeight/4)*3]; //this is wrong
     }
-    console.log("stock center: " + stockCenter);
 }
 
 class Stock {
@@ -173,9 +175,9 @@ class Stock {
         this.stockOsc = new p5.Oscillator('sine'); 
         this.stockArrayIndex = 0;
         this.xPosition = 0;
-        this.values = gmeValues;
+        //this.values = gmeValues;
         this.values = stockData.getColumn(stockData.columns[1]); //here is where the columns are read in
-        console.log(this.values);
+        console.log("values for stock number " + index + ": " + this.values);
         this.graphPosition = stockGraph(this.values);
     }
 
@@ -216,3 +218,8 @@ class Stock {
         }
     }
 }
+
+/**
+ * Data from the csv needs to be cleaned before getting sent in to other
+ * supporting functions, needs to trim leading and trailing quotes, $, and cast to float
+ */
