@@ -30,6 +30,10 @@ gui.add(layout, 'title');
 
 //things that happen before the page can render, include file reading for stock data here
 function preload(){
+    soundFormats('wav');
+    airhorn = loadSound('sounds/airhorn');
+    flush = loadSound('sounds/flush');
+    woo = loadSound('sounds/woo');
     sevenSegment = loadFont('fonts/Seven Segment.ttf');
     stockData = loadTable('stocks/stockData.csv', 'csv', 'header'); //read in the whole sheet
     //tickers = stockData.getRow(0);
@@ -70,7 +74,7 @@ function draw(){
 
 //initialize noise
 function startOscillator() {
-    osc.start();
+    //osc.start();
     playing = true;
 }
 
@@ -84,8 +88,13 @@ function getSoundFromValues(values){
 
 function stockGraph(values, index){ //change to be called by class, access class index
     let array = [];
+    let max = Math.max(...values);
+    let min = Math.min(...values);
+    let top = (stockCenter[(index*2)+1])-stockHeight/2;
+    let bottom = (stockCenter[(index*2)+1])+stockHeight/2;
     for(let i =0; i < values.length; i++){ //fix to something like stockCenter/2 + stockHeight + 2
-        array[i]= constrain(map(values[i], Math.min(...values) *.8, Math.max(...values) * 1.2, (stockCenter[(index*2)+1])-stockHeight/2, (stockCenter[(index*2)+1])+stockHeight/2), (stockCenter[(index*2)+1])-stockHeight/2, (stockCenter[(index*2)+1])+stockHeight/2);
+        array[i]= map(values[i], min *.5, max * 1.5, bottom, top);
+        //array[i]= constrain(map(values[i], max *.5, min * 1.5, (stockCenter[(index*2)+1])-stockHeight/2, (stockCenter[(index*2)+1])+stockHeight/2), (stockCenter[(index*2)+1])-stockHeight/2, (stockCenter[(index*2)+1])+stockHeight/2);
     }   //triple period compares all values in array. probably dogshit for time complexity, but simple to implement
     return array;
 }
@@ -191,6 +200,8 @@ class Stock {
         this.values = stockData.getColumn(stockData.columns[index * 2]); //here is where the columns are read in
         //console.log("values for stock number " + index + ": " + this.values);
         this.graphPosition = stockGraph(this.values, this.index);
+        this.max = Math.max(...this.values);
+        this.min = Math.min(...this.values);
     }
 
     display(){
@@ -216,7 +227,7 @@ class Stock {
                 stroke(0,255,0);
             } else {
                 stroke(255,0,0);
-            }
+            } //stock center index *2 is the x axis, i -1 *10 gets offset to left   gets graph pos for prev using mod math to stay in bounds
             line(stockCenter[this.index*2]-((i-1)*10),this.graphPosition[(this.stockArrayIndex-(i-1))%this.graphPosition.length], stockCenter[this.index*2]-(i*10), this.graphPosition[(this.stockArrayIndex-i)%this.graphPosition.length]);
         } //add mod math here to make sure the loop back is more fluid
         noStroke();
@@ -232,6 +243,15 @@ class Stock {
         if (playing) {
             osc.freq(freq, 0);
             osc.amp(amp, 0);
+        }
+        if(this.values[this.stockArrayIndex] == this.max){
+            airhorn.play();
+        }
+        if(this.values[this.stockArrayIndex] == this.min){
+            flush.play();
+        }
+        if(this.values[this.stockArrayIndex] > this.values[this.stockArrayIndex-1] && this.values[this.stockArrayIndex]> this.values[this.stockArrayIndex+1]){
+            woo.play()
         }
     }
 }
