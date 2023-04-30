@@ -22,13 +22,15 @@ let title = 'sounds of wallstreet';
 let layout = {      //include more for ui
     numStocks: 2, //turn this into an int
     title: 'sounds of wallstreet',
-    accentColor: [245, 238, 42]
+    accentColor: [245, 238, 42],
+    backgroundColor: [128, 128, 128]
 }
 let tickers = ['GME', 'AMC', 'GOOGL', 'AAPL']; //currently hardcoded, may be able to fix?
 let gui = new dat.GUI();
 gui.add(layout, 'numStocks', 1, 9);
 gui.add(layout, 'title');
 gui.addColor(layout, 'accentColor');
+gui.addColor(layout, 'backgroundColor');
 
 //things that happen before the page can render, include file reading for stock data here
 function preload(){
@@ -48,7 +50,7 @@ function setup(){
     yPosition = windowWidth/2
     canvas.mousePressed(startOscillator);
     osc = new p5.Oscillator('sine');
-    background(128);
+    background(layout.backgroundColor);
     frameRate(10);
     getSizeFromNum();
     for(let i = 0; i < layout.numStocks; i++) {
@@ -65,7 +67,7 @@ function setup(){
 }
 
 function draw(){
-    background(128);
+    background(layout.backgroundColor);
     stroke(255, 255, 255);
     noStroke();
     drawText();
