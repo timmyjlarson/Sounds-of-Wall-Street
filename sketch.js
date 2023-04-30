@@ -79,7 +79,7 @@ function draw(){
 
 //initialize noise
 function startOscillator() {
-    //osc.start();
+    osc.start();
     playing = true;
 }
 
@@ -150,12 +150,11 @@ function getSizeFromNum(){
 }
 
 //from step sequencer example, modify to use stock values as input for height
-function playNotes(note) {
-    console.log(note);
-    osc[note].start();
-    osc[note].freq(diatonic[note], 0);
-    osc[note].amp(1, 0);
-    osc[note].amp(0, 0.25);
+function playNotes(stockOsc, note) {
+    stockOsc.start();
+    stockOsc.freq(diatonic[note], 0);
+    stockOsc.amp(1, 0);
+    stockOsc.amp(0, 0.25);
 }
 
 //from step sequencer example, mopdify to use stock values as input for height
@@ -250,13 +249,13 @@ class Stock {
             airhorn.play();
         }
         if(this.values[this.stockArrayIndex] == this.min){
-            flush.play();
+            //flush.play();
         }
         if(this.values[this.stockArrayIndex] > this.values[this.stockArrayIndex-1] && this.values[this.stockArrayIndex]> this.values[this.stockArrayIndex+1]){
             //woo.play()
         }
         //console.log(this.graphNoises)
         //https://editor.p5js.org/jkeston/sketches/67DfafWvt
-        playNotes(this.graphNoises[this.stockArrayIndex]);
+        playNotes(this.stockOsc, this.graphNoises[this.stockArrayIndex]);
     }
 }
