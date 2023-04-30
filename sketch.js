@@ -18,15 +18,17 @@ let stocks = [];
 let stockData = [[],[]];
 let stockCenter = [];
 let stockWidth, stockHeight;
-let title = '$soundsofwallstreet';
+let title = 'sounds of wallstreet';
 let layout = {      //include more for ui
     numStocks: 2, //turn this into an int
-    title: '$soundsofwallstreet'
+    title: 'sounds of wallstreet',
+    accentColor: [245, 238, 42]
 }
-let tickers = ['$GME', '$AMC']; //currently hardcoded, may be able to fix?
+let tickers = ['GME', 'AMC', 'GOOGL', 'AAPL']; //currently hardcoded, may be able to fix?
 let gui = new dat.GUI();
 gui.add(layout, 'numStocks', 1, 9);
 gui.add(layout, 'title');
+gui.addColor(layout, 'accentColor');
 
 //things that happen before the page can render, include file reading for stock data here
 function preload(){
@@ -46,7 +48,7 @@ function setup(){
     yPosition = windowWidth/2
     canvas.mousePressed(startOscillator);
     osc = new p5.Oscillator('sine');
-    background(0);
+    background(128);
     frameRate(10);
     getSizeFromNum();
     for(let i = 0; i < layout.numStocks; i++) {
@@ -63,6 +65,7 @@ function setup(){
 }
 
 function draw(){
+    background(128);
     stroke(255, 255, 255);
     noStroke();
     drawText();
@@ -104,7 +107,7 @@ function drawText(){
     textSize(50);
     textFont(sevenSegment);
     textAlign(CENTER);
-    fill(208, 9, 235);
+    fill(layout.accentColor);
     text(layout.title, windowWidth/2, (windowHeight/6))
 }
 
@@ -197,17 +200,22 @@ class Stock {
         this.stockArrayIndex = 0;
         this.xPosition = 0;
         //this.values = gmeValues;
-        this.values = stockData.getColumn(stockData.columns[index * 2]); //here is where the columns are read in
-        //console.log("values for stock number " + index + ": " + this.values);
+        this.values = stockData.getColumn(this.index); //here is where the columns are read in
+        console.log("values for stock number " + this.index + ": " + this.values);
         this.graphPosition = stockGraph(this.values, this.index);
         this.max = Math.max(...this.values);
         this.min = Math.min(...this.values);
     }
 
-    display(){
-        fill(94,93,92)
+    display(){ 
+        fill(0)
+        stroke(layout.accentColor);
+        strokeWeight(4);
         rect(stockCenter[this.index*2], stockCenter[(this.index*2)+1], stockWidth,stockHeight)
+        noStroke();
+        strokeWeight(2);
         this.stockArrayIndex = frameCount%this.graphPosition.length; 
+        //console.log(this.values[this.stockArrayIndex]);
         this.xPosition = this.graphPosition[this.stockArrayIndex]; 
         if(this.graphPosition[this.stockArrayIndex] > this.graphPosition[this.stockArrayIndex-1]){ 
             fill(0,255,0);
@@ -234,8 +242,9 @@ class Stock {
         textSize(40);
         textFont(sevenSegment);
         textAlign(CENTER);
-        fill(208, 9, 235);
+        fill(layout.accentColor);
         text(this.ticker, stockCenter[(this.index*2)], stockCenter[(this.index*2)+1]+(stockCenter[(this.index*2)+1]*.6)); 
+        text("$" + this.values[this.stockArrayIndex], stockCenter[(this.index*2)], stockCenter[(this.index*2)+1]+(stockCenter[(this.index*2)+1]*.75)); 
     }
 
     noise(){
