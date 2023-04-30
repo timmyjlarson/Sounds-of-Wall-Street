@@ -20,14 +20,14 @@ let stockCenter = [];
 let stockWidth, stockHeight;
 let title = 'sounds of wallstreet';
 let layout = {      //include more for ui
-    numStocks: 2, //turn this into an int
+    numStocks: 3, //turn this into an int
     title: 'sounds of wallstreet',
     accentColor: [245, 238, 42],
     backgroundColor: [128, 128, 128]
 }
 let tickers = ['GME', 'AMC', 'GOOGL', 'AAPL']; //currently hardcoded, may be able to fix?
 let gui = new dat.GUI();
-gui.add(layout, 'numStocks', 1, 9);
+gui.add(layout, 'numStocks', 1, 6);
 gui.add(layout, 'title');
 gui.addColor(layout, 'accentColor');
 gui.addColor(layout, 'backgroundColor');
@@ -86,9 +86,16 @@ function startOscillator() {
 //takes values and turns them into sounds, needs refactor to support class functionality
 //add func for nicer sound ranges
 function getSoundFromValues(values){
+    let array = [];
     soundVal= values[frameCount%values.length];
     freq = diatonic[map(soundVal, 10, 50, 0, diatonic.length)];
     amp = constrain(map(soundVal, 10, 50, 0, 1), 0, 1);
+    let max = Math.max(...values);
+    let min = Math.min(...values);
+    for(let i =0; i < values.length; i++){
+        array[i] = floor(map(values[i],min, max,0,diatonic.length));
+    }
+    return array;
 }
 
 function stockGraph(values, index){ //change to be called by class, access class index
@@ -126,47 +133,29 @@ function getSizeFromNum(){
     } else if(layout.numStocks == 3){
         stockWidth = width/5;
         stockHeight = width/5;
-        stockCenter = [windowWidth/6, windowHeight/2, (windowWidth/6)*2, windowHeight/2, 
-                        (windowWidth/6)*4, windowHeight/2];
+        stockCenter = [windowWidth/6, windowHeight/2, (windowWidth/6)*3, windowHeight/2, 
+                        (windowWidth/6)*5, windowHeight/2];
     } else if(layout.numStocks == 4){
-        stockWidth = width/5;
-        stockHeight = width/5;
+        stockWidth = width/7;
+        stockHeight = width/7;
         stockCenter =[windowWidth/4, windowHeight/4, (windowWidth/4)*3, windowHeight/4,
-                        (windowWidth/4)*3, (windowHeight/4)*3];
-    } else if(layout.numStocks == 5){
-        stockWidth = width/5;
-        stockHeight = width/5;
-        stockCenter =[windowWidth/4, windowHeight/4, (windowWidth/4)*3, windowHeight/4,
-                        (windowWidth/4)*3, (windowHeight/4)*3]; //this is wrong
+        windowWidth/4, (windowHeight/4)*3, (windowWidth/4)*3, (windowHeight/4)*3];
     } else if(layout.numStocks == 6){
-        stockWidth = width/5;
-        stockHeight = width/5;
-        stockCenter =[windowWidth/4, windowHeight/4, (windowWidth/4)*3, windowHeight/4,
-                        (windowWidth/4)*3, (windowHeight/4)*3]; //this is wrong
-    } else if(layout.numStocks == 7){
-        stockWidth = width/5;
-        stockHeight = width/5;
-        stockCenter =[windowWidth/4, windowHeight/4, (windowWidth/4)*3, windowHeight/4,
-                        (windowWidth/4)*3, (windowHeight/4)*3]; //this is wrong
-    } else if(layout.numStocks == 8){
-        stockWidth = width/5;
-        stockHeight = width/5;
-        stockCenter =[windowWidth/4, windowHeight/4, (windowWidth/4)*3, windowHeight/4,
-                        (windowWidth/4)*3, (windowHeight/4)*3]; //this is wrong
-    } else if(layout.numStocks == 9){
-        stockWidth = width/5;
-        stockHeight = width/5;
-        stockCenter =[windowWidth/4, windowHeight/4, (windowWidth/4)*3, windowHeight/4,
-                        (windowWidth/4)*3, (windowHeight/4)*3]; //this is wrong
+        stockWidth = width/7;
+        stockHeight = width/7;
+        stockCenter =[windowWidth/6, windowHeight/4, (windowWidth/6)*3, windowHeight/4, 
+        (windowWidth/6)*5, windowHeight/4, windowWidth/6, (windowHeight/4) *3, (windowWidth/6)*3, (windowHeight/4) *3, 
+        (windowWidth/6)*5, (windowHeight/4) *3];
     }
 }
 
-//from step sequencer example, mopdify to use stock values as input for height
-function playNotes(l) {
-    osc[l].start();
-    osc[l].freq(scale[l], 0);
-    osc[l].amp(1, 0);
-    osc[l].amp(0, 0.25);
+//from step sequencer example, modify to use stock values as input for height
+function playNotes(note) {
+    console.log(note);
+    osc[note].start();
+    osc[note].freq(diatonic[note], 0);
+    osc[note].amp(1, 0);
+    osc[note].amp(0, 0.25);
 }
 
 //from step sequencer example, mopdify to use stock values as input for height
@@ -203,8 +192,10 @@ class Stock {
         this.xPosition = 0;
         //this.values = gmeValues;
         this.values = stockData.getColumn(this.index); //here is where the columns are read in
-        console.log("values for stock number " + this.index + ": " + this.values);
+        //console.log("values for stock number " + this.index + ": " + this.values);
         this.graphPosition = stockGraph(this.values, this.index);
+        this.graphNoises = getSoundFromValues(this.values);
+        console.log("graph noise values for stock "+ this.index+ ": "+this.graphNoises);
         this.max = Math.max(...this.values);
         this.min = Math.min(...this.values);
     }
@@ -250,7 +241,7 @@ class Stock {
     }
 
     noise(){
-        getSoundFromValues(this.values);
+        //getSoundFromValues(this.values);
         if (playing) {
             osc.freq(freq, 0);
             osc.amp(amp, 0);
@@ -262,7 +253,10 @@ class Stock {
             flush.play();
         }
         if(this.values[this.stockArrayIndex] > this.values[this.stockArrayIndex-1] && this.values[this.stockArrayIndex]> this.values[this.stockArrayIndex+1]){
-            woo.play()
+            //woo.play()
         }
+        //console.log(this.graphNoises)
+        //https://editor.p5js.org/jkeston/sketches/67DfafWvt
+        playNotes(this.graphNoises[this.stockArrayIndex]);
     }
 }
