@@ -13,15 +13,15 @@ let diatonic = [/*27.50,30.87,32.70,36.71,41.20,43.65,49.00,55.00,61.74,65.41,73
     523.25,587.33,659.25,698.46,783.99,880.00,987.77,1046.50];
 let bpm = 140;
 let playing, reverb;
-
 let stocks = [];
 let stockData = [[],[]];
 let stockCenter = [];
 let stockWidth, stockHeight;
 let title = 'sounds of wallstreet';
 let layout = {      //include more for ui
-    numStocks: 4, //turn this into an int
+    numStocks: 5, //turn this into an int
     title: 'sounds of wallstreet',
+    titleSize: 50,
     accentColor: [245, 238, 42],
     backgroundColor: [128, 128, 128],
     frameRate: 7
@@ -30,6 +30,7 @@ let tickers = ['GME', 'AMC', 'GOOGL', 'AAPL']; //currently hardcoded, may be abl
 let gui = new dat.GUI();
 gui.add(layout, 'numStocks', 1, 6);
 gui.add(layout, 'title');
+gui.add(layout, 'titleSize', 10, 100);
 gui.add(layout, 'frameRate');
 gui.addColor(layout, 'accentColor');
 gui.addColor(layout, 'backgroundColor');
@@ -43,22 +44,17 @@ function preload(){
     kick = loadSound('sounds/technoKick');
     trumpet = loadSound('sounds/trumpet');
     sevenSegment = loadFont('fonts/Seven Segment.ttf');
-    stockData = loadTable('stocks/stockData.csv', 'csv', 'header'); //read in the whole sheet
-    //tickers = stockData.getRow(0);
-    //console.log(stockData.getRow(0));
-    //need to update xlsx manually and then convert to csv, pending more elegant solution
+    stockData = loadTable('stocks/stockData.csv', 'csv', 'header'); 
 }
 
 function setup(){
     canvas = createCanvas(windowWidth, windowHeight);
     yPosition = windowWidth/2
-    canvas.mousePressed(startOscillator);
-    osc = new p5.Oscillator('sine');
+    canvas.mousePressed(startSound);
     background(layout.backgroundColor);
     frameRate(layout.frameRate);
     getSizeFromNum();
-    for(let i = 0; i < layout.numStocks; i++) {
-        //let ticker = stockData[0][i*4];
+    for(let i = 0; i < 9; i++) { //change 9 to be dynamic based on sheet size
         let ticker = tickers[i];
         stocks[i] = new Stock(ticker, i);
     }
@@ -71,20 +67,20 @@ function setup(){
 }
 
 function draw(){
+    //getSizeFromNum();
     frameRate(layout.frameRate);
     background(layout.backgroundColor);
     stroke(255, 255, 255);
     noStroke();
     drawText();
-    for(let i = 0; i<stocks.length; i++){
+    for(let i = 0; i<layout.numStocks; i++){
         stocks[i].display();
         stocks[i].noise();
     }
 }
 
 //initialize noise
-function startOscillator() {
-    //osc.start();
+function startSound() {
     playing = true;
 }
 
@@ -118,7 +114,7 @@ function stockGraph(values, index){ //change to be called by class, access class
 
 //here to avoid bloat in draw function, might be adapted for stock labels
 function drawText(){
-    textSize(50);
+    textSize(layout.titleSize);
     textFont(sevenSegment);
     textAlign(CENTER);
     fill(layout.accentColor);
@@ -145,11 +141,18 @@ function getSizeFromNum(){
         stockHeight = width/7;
         stockCenter =[windowWidth/4, windowHeight/4, (windowWidth/4)*3, windowHeight/4,
         windowWidth/4, (windowHeight/4)*3, (windowWidth/4)*3, (windowHeight/4)*3];
-    } else if(layout.numStocks == 6){
+    } else if(layout.numStocks == 5){
         stockWidth = width/7;
         stockHeight = width/7;
         stockCenter =[windowWidth/6, windowHeight/4, (windowWidth/6)*3, windowHeight/4, 
-        (windowWidth/6)*5, windowHeight/4, windowWidth/6, (windowHeight/4) *3, (windowWidth/6)*3, (windowHeight/4) *3, 
+        (windowWidth/6)*5, windowHeight/4, windowWidth/4, (windowHeight/4)*3, (windowWidth/4)*3, 
+        (windowHeight/4)*3];
+    }else if(layout.numStocks == 6){
+        stockWidth = width/7;
+        stockHeight = width/7;
+        stockCenter =[windowWidth/6, windowHeight/4, (windowWidth/6)*3, windowHeight/4, 
+        (windowWidth/6)*5, windowHeight/4, windowWidth/6, (windowHeight/4) *3, (windowWidth/6)*3, 
+        (windowHeight/4) *3, 
         (windowWidth/6)*5, (windowHeight/4) *3];
     }
 }
@@ -194,15 +197,13 @@ class Stock {
         this.index = index;
         this.ticker = ticker;
         this.frameX = stockCenter[index*2];
-        this.frameY = stockCenter[(index*2)+1]; //these don't work
+        this.frameY = stockCenter[(index*2)+1]; 
         this.width = stockWidth;
         this.height = stockHeight
         this.stockOsc = new p5.Oscillator('sine'); 
         this.stockArrayIndex = 0;
         this.xPosition = 0;
-        //this.values = gmeValues;
         this.values = stockData.getColumn(this.index); //here is where the columns are read in
-        //console.log("values for stock number " + this.index + ": " + this.values);
         this.graphPosition = stockGraph(this.values, this.index);
         this.graphNoises = getSoundFromValues(this.values);
         console.log("graph noise values for stock "+ this.index+ ": "+this.graphNoises);
@@ -218,7 +219,6 @@ class Stock {
         noStroke();
         strokeWeight(2);
         this.stockArrayIndex = frameCount%this.graphPosition.length; 
-        //console.log(this.values[this.stockArrayIndex]);
         this.xPosition = this.graphPosition[this.stockArrayIndex]; 
         if(this.graphPosition[this.stockArrayIndex] > this.graphPosition[this.stockArrayIndex-1]){ 
             fill(0,255,0);
@@ -245,21 +245,17 @@ class Stock {
         textSize(40);
         textFont(sevenSegment);
         textAlign(CENTER);
-        fill(layout.accentColor);
-        text(this.ticker, stockCenter[(this.index*2)], stockCenter[(this.index*2)+1]+(stockCenter[(this.index*2)+1]*.6)); 
+        fill(layout.accentColor); //(this.ticker, stockCenter[(this.index*2)], stockCenter[(this.index*2)+1]+(stockCenter[(this.index*2)+1]*.6));
+        text(this.ticker, stockCenter[(this.index*2)], stockCenter[(this.index*2)+1]+(stockHeight*.7)); 
         text("$" + this.values[this.stockArrayIndex], stockCenter[(this.index*2)], stockCenter[(this.index*2)+1]+(stockCenter[(this.index*2)+1]*.75)); 
     }
 
     noise(){
         //getSoundFromValues(this.values);
-        if (playing) {
-            osc.freq(freq, 0);
-            osc.amp(amp, 0);
-        }
-        if(this.values[this.stockArrayIndex] == this.max){
+        if(this.values[this.stockArrayIndex] == this.max & playing){
             trumpet.play();
         }
-        if(this.values[this.stockArrayIndex] == this.min){
+        if(this.values[this.stockArrayIndex] == this.min & playing){
             kick.play();
         }
         if(this.values[this.stockArrayIndex] > this.values[this.stockArrayIndex-1] && this.values[this.stockArrayIndex]> this.values[this.stockArrayIndex+1]){
