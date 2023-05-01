@@ -26,7 +26,7 @@ let layout = {      //include more for ui
     backgroundColor: [128, 128, 128],
     frameRate: 7
 }
-let tickers = ['GME', 'AMC', 'GOOGL', 'AAPL']; //currently hardcoded, may be able to fix?
+let tickers = ['GME', 'AMC', 'GOOGL', 'AAPL', 'MSFT', 'AMZN']; //currently hardcoded, may be able to fix?
 let gui = new dat.GUI();
 gui.add(layout, 'numStocks', 1, 6);
 gui.add(layout, 'title');
@@ -118,7 +118,11 @@ function drawText(){
     textFont(sevenSegment);
     textAlign(CENTER);
     fill(layout.accentColor);
-    text(layout.title, windowWidth/2, (windowHeight/6))
+    if(layout.numStocks<4){
+        text(layout.title, windowWidth/2, (windowHeight/6))
+    } else{
+        text(layout.title, windowWidth/2, (windowHeight/7)*4)
+    }
 }
 
 //used to find grid arrangement for stock array based on number of stocks
@@ -206,7 +210,6 @@ class Stock {
         this.values = stockData.getColumn(this.index); //here is where the columns are read in
         this.graphPosition = stockGraph(this.values, this.index);
         this.graphNoises = getSoundFromValues(this.values);
-        console.log("graph noise values for stock "+ this.index+ ": "+this.graphNoises);
         this.max = Math.max(...this.values);
         this.min = Math.min(...this.values);
     }
@@ -246,8 +249,8 @@ class Stock {
         textFont(sevenSegment);
         textAlign(CENTER);
         fill(layout.accentColor); //(this.ticker, stockCenter[(this.index*2)], stockCenter[(this.index*2)+1]+(stockCenter[(this.index*2)+1]*.6));
-        text(this.ticker, stockCenter[(this.index*2)], stockCenter[(this.index*2)+1]+(stockHeight*.7)); 
-        text("$" + this.values[this.stockArrayIndex], stockCenter[(this.index*2)], stockCenter[(this.index*2)+1]+(stockCenter[(this.index*2)+1]*.75)); 
+        text(this.ticker, stockCenter[(this.index*2)], stockCenter[(this.index*2)+1]+(stockHeight*.65)); 
+        text("$" + this.values[this.stockArrayIndex], stockCenter[(this.index*2)], stockCenter[(this.index*2)+1]+(stockHeight*.81)); 
     }
 
     noise(){
