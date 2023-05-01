@@ -19,7 +19,7 @@ let stockCenter = [];
 let stockWidth, stockHeight;
 let title = 'sounds of wallstreet';
 let layout = {      //include more for ui
-    numStocks: 5, //turn this into an int
+    numStocks: 6, //turn this into an int
     title: 'sounds of wallstreet',
     titleSize: 50,
     accentColor: [245, 238, 42],
@@ -118,7 +118,7 @@ function drawText(){
     textFont(sevenSegment);
     textAlign(CENTER);
     fill(layout.accentColor);
-    if(layout.numStocks<4){
+    if(layout.numStocks<=3){
         text(layout.title, windowWidth/2, (windowHeight/6))
     } else{
         text(layout.title, windowWidth/2, (windowHeight/7)*4)
