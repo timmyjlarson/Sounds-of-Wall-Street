@@ -8,7 +8,7 @@
  * interface with excel spreadsheet
  */
 let waveform = ["sine", "sawtooth", "triangle", "square"];
-let diatonic = [27.50,30.87,32.70,36.71,41.20,43.65,49.00,55.00,61.74,65.41,73.42,82.41,87.31,98.00,110.00,
+let diatonic = [/*27.50,30.87,32.70,36.71,41.20,43.65,49.00,55.00,61.74,65.41,73.42,82.41,87.31,98.00,110.00,*/
     123.47,130.81,146.83,164.81,174.61,196.00,220.00,246.94,261.63,293.66,329.63,349.23,392.00,440.00,493.88,
     523.25,587.33,659.25,698.46,783.99,880.00,987.77,1046.50];
 let bpm = 140;
@@ -20,15 +20,17 @@ let stockCenter = [];
 let stockWidth, stockHeight;
 let title = 'sounds of wallstreet';
 let layout = {      //include more for ui
-    numStocks: 3, //turn this into an int
+    numStocks: 4, //turn this into an int
     title: 'sounds of wallstreet',
     accentColor: [245, 238, 42],
-    backgroundColor: [128, 128, 128]
+    backgroundColor: [128, 128, 128],
+    frameRate: 7
 }
 let tickers = ['GME', 'AMC', 'GOOGL', 'AAPL']; //currently hardcoded, may be able to fix?
 let gui = new dat.GUI();
 gui.add(layout, 'numStocks', 1, 6);
 gui.add(layout, 'title');
+gui.add(layout, 'frameRate');
 gui.addColor(layout, 'accentColor');
 gui.addColor(layout, 'backgroundColor');
 
@@ -38,6 +40,8 @@ function preload(){
     airhorn = loadSound('sounds/airhorn');
     flush = loadSound('sounds/flush');
     woo = loadSound('sounds/woo');
+    kick = loadSound('sounds/technoKick');
+    trumpet = loadSound('sounds/trumpet');
     sevenSegment = loadFont('fonts/Seven Segment.ttf');
     stockData = loadTable('stocks/stockData.csv', 'csv', 'header'); //read in the whole sheet
     //tickers = stockData.getRow(0);
@@ -51,7 +55,7 @@ function setup(){
     canvas.mousePressed(startOscillator);
     osc = new p5.Oscillator('sine');
     background(layout.backgroundColor);
-    frameRate(10);
+    frameRate(layout.frameRate);
     getSizeFromNum();
     for(let i = 0; i < layout.numStocks; i++) {
         //let ticker = stockData[0][i*4];
@@ -67,6 +71,7 @@ function setup(){
 }
 
 function draw(){
+    frameRate(layout.frameRate);
     background(layout.backgroundColor);
     stroke(255, 255, 255);
     noStroke();
@@ -79,7 +84,7 @@ function draw(){
 
 //initialize noise
 function startOscillator() {
-    osc.start();
+    //osc.start();
     playing = true;
 }
 
@@ -151,10 +156,12 @@ function getSizeFromNum(){
 
 //from step sequencer example, modify to use stock values as input for height
 function playNotes(stockOsc, note) {
-    stockOsc.start();
-    stockOsc.freq(diatonic[note], 0);
-    stockOsc.amp(1, 0);
-    stockOsc.amp(0, 0.25);
+    if(playing){
+        stockOsc.start();
+        stockOsc.freq(diatonic[note], 0);
+        stockOsc.amp(1, 0);
+        stockOsc.amp(0, 0.25);
+    }
 }
 
 //from step sequencer example, mopdify to use stock values as input for height
@@ -166,13 +173,17 @@ function keyPressed() {
       rev = !rev;
       if (rev) {
         for (let i = 0; i < layers; i++) {
-          osc[i].connect(reverb);
+            for(Stock in stocks){
+                this.stockOsc[i].connect(reverb);
+            }
         }        
       }
       else {
         for (let i = 0; i < layers; i++) {
-          osc[i].disconnect(reverb);
-          osc[i].connect(soundOut);
+            for(Stock in stocks){
+            this.stockOsc[i].disconnect(reverb);
+            this.stockOsc[i].connect(soundOut);
+            }
         }
       }
     }
@@ -246,10 +257,10 @@ class Stock {
             osc.amp(amp, 0);
         }
         if(this.values[this.stockArrayIndex] == this.max){
-            airhorn.play();
+            trumpet.play();
         }
         if(this.values[this.stockArrayIndex] == this.min){
-            //flush.play();
+            kick.play();
         }
         if(this.values[this.stockArrayIndex] > this.values[this.stockArrayIndex-1] && this.values[this.stockArrayIndex]> this.values[this.stockArrayIndex+1]){
             //woo.play()
