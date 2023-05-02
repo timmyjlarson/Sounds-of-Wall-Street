@@ -7,10 +7,10 @@
  * 
  * interface with excel spreadsheet
  */
-let waveform = ["sine", "sawtooth", "triangle", "square"];
+let waveform = ["sine", "sawtooth", "triangle", "square"]; //try adding func for selecting different wave forms?
 let diatonic = [/*27.50,30.87,32.70,36.71,41.20,43.65,49.00,55.00,61.74,65.41,73.42,82.41,87.31,98.00,110.00,*/
     123.47,130.81,146.83,164.81,174.61,196.00,220.00,246.94,261.63,293.66,329.63,349.23,392.00,440.00,493.88,
-    523.25,587.33,659.25,698.46,783.99,880.00,987.77,1046.50];
+    523.25,587.33,659.25,698.46,783.99,880.00,987.77,1046.50]; //commented out lower values for more paletable sound
 let bpm = 140;
 let playing, reverb;
 let stocks = [];
@@ -24,7 +24,8 @@ let layout = {      //include more for ui
     titleSize: 50,
     accentColor: [245, 238, 42],
     backgroundColor: [128, 128, 128],
-    frameRate: 7
+    frameRate: 7,
+    soundType: 'sine'
 }
 let tickers = ['GME', 'AMC', 'GOOGL', 'AAPL', 'MSFT', 'AMZN']; //currently hardcoded, may be able to fix?
 let gui = new dat.GUI();
@@ -32,6 +33,7 @@ gui.add(layout, 'numStocks', 1, 6);
 gui.add(layout, 'title');
 gui.add(layout, 'titleSize', 10, 100);
 gui.add(layout, 'frameRate');
+gui.add(layout, 'soundType', {sine: 'sine', sawtooth: 'sawtooth', triangle: 'triangle', square: 'square'})
 gui.addColor(layout, 'accentColor');
 gui.addColor(layout, 'backgroundColor');
 
@@ -51,8 +53,6 @@ function setup(){
     canvas = createCanvas(windowWidth, windowHeight);
     yPosition = windowWidth/2
     canvas.mousePressed(startSound);
-    background(layout.backgroundColor);
-    frameRate(layout.frameRate);
     getSizeFromNum();
     for(let i = 0; i < 9; i++) { //change 9 to be dynamic based on sheet size
         let ticker = tickers[i];
@@ -67,11 +67,8 @@ function setup(){
 }
 
 function draw(){
-    //getSizeFromNum();
     frameRate(layout.frameRate);
     background(layout.backgroundColor);
-    stroke(255, 255, 255);
-    noStroke();
     drawText();
     for(let i = 0; i<layout.numStocks; i++){
         stocks[i].display();
@@ -84,8 +81,7 @@ function startSound() {
     playing = true;
 }
 
-//takes values and turns them into sounds, needs refactor to support class functionality
-//add func for nicer sound ranges
+//takes values and turns them into sounds using diatonic scale, possibility to add chromatic pending dat gui list knowledge
 function getSoundFromValues(values){
     let array = [];
     soundVal= values[frameCount%values.length];
@@ -99,20 +95,28 @@ function getSoundFromValues(values){
     return array;
 }
 
-function stockGraph(values, index){ //change to be called by class, access class index
+//takes stock data and turns it into indexes for graph positions
+function stockGraph(values, index){ 
     let array = [];
     let max = Math.max(...values);
     let min = Math.min(...values);
     let top = (stockCenter[(index*2)+1])-stockHeight/2;
     let bottom = (stockCenter[(index*2)+1])+stockHeight/2;
-    for(let i =0; i < values.length; i++){ //fix to something like stockCenter/2 + stockHeight + 2
+    for(let i =0; i < values.length; i++){ 
         array[i]= map(values[i], min *.5, max * 1.5, bottom, top);
-        //array[i]= constrain(map(values[i], max *.5, min * 1.5, (stockCenter[(index*2)+1])-stockHeight/2, (stockCenter[(index*2)+1])+stockHeight/2), (stockCenter[(index*2)+1])-stockHeight/2, (stockCenter[(index*2)+1])+stockHeight/2);
-    }   //triple period compares all values in array. probably dogshit for time complexity, but simple to implement
+    }
     return array;
 }
 
-//here to avoid bloat in draw function, might be adapted for stock labels
+function windowResized() {
+    resizeCanvas(windowWidth, windowHeight);
+    getSizeFromNum();
+    for(let i = 0; i < numStocks; i ++){
+        this.graphPosition = stockGraph(this.values, this.index); //this almost works
+    }
+  }
+
+//here to avoid bloat in draw function
 function drawText(){
     textSize(layout.titleSize);
     textFont(sevenSegment);
@@ -127,7 +131,7 @@ function drawText(){
 
 //used to find grid arrangement for stock array based on number of stocks
 function getSizeFromNum(){
-    if(layout.numStocks == 1){ // look at mod math and patterns for more concise code
+    if(layout.numStocks == 1){ 
         stockWidth = width/5;
         stockHeight = width/5;
         stockCenter = [windowWidth/2, windowHeight/2];
@@ -176,7 +180,7 @@ function keyPressed() {
     if (key === ' ') {
       playing = !playing;
     }
-    if (key === 'r') {
+    if (key === 'r') {  //can't tell if this works or not
       rev = !rev;
       if (rev) {
         for (let i = 0; i < layers; i++) {
@@ -199,12 +203,10 @@ function keyPressed() {
 class Stock {
     constructor(ticker, index){
         this.index = index;
-        this.ticker = ticker;
-        this.frameX = stockCenter[index*2];
-        this.frameY = stockCenter[(index*2)+1]; 
+        this.ticker = ticker; 
         this.width = stockWidth;
         this.height = stockHeight
-        this.stockOsc = new p5.Oscillator('sine'); 
+        this.stockOsc = new p5.Oscillator('sine'); //try other types
         this.stockArrayIndex = 0;
         this.xPosition = 0;
         this.values = stockData.getColumn(this.index); //here is where the columns are read in
@@ -224,16 +226,11 @@ class Stock {
         this.stockArrayIndex = frameCount%this.graphPosition.length; 
         this.xPosition = this.graphPosition[this.stockArrayIndex]; 
         if(this.graphPosition[this.stockArrayIndex] > this.graphPosition[this.stockArrayIndex-1]){ 
-            fill(0,255,0);
-        } else {
-            fill(255,0,0);
-        }
-        circle(stockCenter[this.index*2], this.xPosition, 5); 
-        if(this.graphPosition[this.stockArrayIndex] > this.graphPosition[this.stockArrayIndex-1]){ 
             stroke(0,255,0);
-        } else {
+        } else { // green for gain
             stroke(255,0,0);
-        }
+        } //red for loss
+        circle(stockCenter[this.index*2], this.xPosition, 5); 
         line(stockCenter[this.index*2],this.xPosition, stockCenter[this.index*2]-10, this.graphPosition[this.stockArrayIndex-1]); 
         let endLine = floor(stockWidth/10)/2;
         for(let i = 2; i < endLine; i++){
@@ -248,7 +245,7 @@ class Stock {
         textSize(40);
         textFont(sevenSegment);
         textAlign(CENTER);
-        fill(layout.accentColor); //(this.ticker, stockCenter[(this.index*2)], stockCenter[(this.index*2)+1]+(stockCenter[(this.index*2)+1]*.6));
+        fill(layout.accentColor); 
         text(this.ticker, stockCenter[(this.index*2)], stockCenter[(this.index*2)+1]+(stockHeight*.65)); 
         text("$" + this.values[this.stockArrayIndex], stockCenter[(this.index*2)], stockCenter[(this.index*2)+1]+(stockHeight*.81)); 
     }
@@ -257,15 +254,13 @@ class Stock {
         //getSoundFromValues(this.values);
         if(this.values[this.stockArrayIndex] == this.max & playing){
             trumpet.play();
-        }
+        }//52 week high
         if(this.values[this.stockArrayIndex] == this.min & playing){
             kick.play();
-        }
+        }//52 week low
         if(this.values[this.stockArrayIndex] > this.values[this.stockArrayIndex-1] && this.values[this.stockArrayIndex]> this.values[this.stockArrayIndex+1]){
             //woo.play()
-        }
-        //console.log(this.graphNoises)
-        //https://editor.p5js.org/jkeston/sketches/67DfafWvt
+        }//local high
         playNotes(this.stockOsc, this.graphNoises[this.stockArrayIndex]);
     }
 }
