@@ -11,13 +11,16 @@ let waveform = ["sine", "sawtooth", "triangle", "square"]; //try adding func for
 let diatonic = [/*27.50,30.87,32.70,36.71,41.20,43.65,49.00,55.00,61.74,65.41,73.42,82.41,87.31,98.00,110.00,*/
     123.47,130.81,146.83,164.81,174.61,196.00,220.00,246.94,261.63,293.66,329.63,349.23,392.00,440.00,493.88,
     523.25,587.33,659.25,698.46,783.99,880.00,987.77,1046.50]; //commented out lower values for more paletable sound
+let chromatic = [/*27.50,29.14,30.87,32.70,34.65,36.71,38.89,41.20,43.65,46.25,49.00,51.91,55.00,58.27,61.74,65.41,
+    69.30,73.42,77.78,82.41,87.31,92.50,98.00,103.83,110.00,*/116.54,123.47,130.81,138.59,146.83,155.56,164.81,174.61,
+    185.00,196.00,207.65,220.00,233.08,246.94,261.63,277.18,293.66,311.13,329.63,349.23,369.99,392.00,415.30,440.00,
+    466.16,493.88,523.25,554.37,587.33,622.25,659.25,698.46,739.99,783.99,830.61,880.00,932.33,987.77,1046.50];
 let bpm = 140;
 let playing, reverb;
 let stocks = [];
 let stockData = [[],[]];
 let stockCenter = [];
 let stockWidth, stockHeight;
-let title = 'sounds of wallstreet';
 let layout = {      //include more for ui
     numStocks: 6, //turn this into an int
     title: 'sounds of wallstreet',
@@ -25,17 +28,21 @@ let layout = {      //include more for ui
     accentColor: [245, 238, 42],
     backgroundColor: [128, 128, 128],
     frameRate: 7,
-    soundType: 'sine'
+    soundWave: 'sine',
+    soundType: 'diatonic'
 }
-let tickers = ['GME', 'AMC', 'GOOGL', 'AAPL', 'MSFT', 'AMZN']; //currently hardcoded, may be able to fix?
+let tickers = ['GME', 'AMC', 'GOOGL', 'AAPL', 'MSFT', 'AMZN', 'TSLA', 'NKE', 'META']; //currently hardcoded, may be able to fix?
 let gui = new dat.GUI();
-gui.add(layout, 'numStocks', 1, 6);
+gui.close();
+gui.add(layout, 'numStocks', 1, 6, 1);
 gui.add(layout, 'title');
 gui.add(layout, 'titleSize', 10, 100);
-gui.add(layout, 'frameRate');
-gui.add(layout, 'soundType', {sine: 'sine', sawtooth: 'sawtooth', triangle: 'triangle', square: 'square'})
+gui.add(layout, 'frameRate', 1, 144);
+gui.add(layout, 'soundWave', {sine: 'sine', sawtooth: 'sawtooth', triangle: 'triangle', square: 'square'})
+gui.add(layout, 'soundType', {diatonic: 'diatonic', chromatic: 'chromatic'})
 gui.addColor(layout, 'accentColor');
 gui.addColor(layout, 'backgroundColor');
+
 
 //things that happen before the page can render, include file reading for stock data here
 function preload(){
@@ -64,6 +71,7 @@ function setup(){
     beatDur = round(6000 / bpm / 8);
     reverb = new p5.Reverb();
     reverb.set(5,0,false);
+    
 }
 
 function draw(){
@@ -85,24 +93,30 @@ function startSound() {
 function getSoundFromValues(values){
     let array = [];
     soundVal= values[frameCount%values.length];
-    freq = diatonic[map(soundVal, 10, 50, 0, diatonic.length)];
-    amp = constrain(map(soundVal, 10, 50, 0, 1), 0, 1);
     let max = Math.max(...values);
     let min = Math.min(...values);
-    for(let i =0; i < values.length; i++){
-        array[i] = floor(map(values[i],min, max,0,diatonic.length));
+    if(layout.soundType == diatonic){
+        freq = diatonic[map(soundVal, 10, 50, 0, diatonic.length)];
+        amp = constrain(map(soundVal, 10, 50, 0, 1), 0, 1);
+        for(let i =0; i < values.length; i++){
+            array[i] = floor(map(values[i],min, max,0,diatonic.length));
+        }
+    } else {
+        freq = chromatic[map(soundVal, 10, 50, 0, chromatic.length)];
+        amp = constrain(map(soundVal, 10, 50, 0, 1), 0, 1);
+        for(let i =0; i < values.length; i++){
+            array[i] = floor(map(values[i],min, max,0,chromatic.length));
+        }
     }
     return array;
 }
 
 //takes stock data and turns it into indexes for graph positions
-function stockGraph(values, index){ 
+function stockGraph(values, index, max, min, size){ 
     let array = [];
-    let max = Math.max(...values);
-    let min = Math.min(...values);
     let top = (stockCenter[(index*2)+1])-stockHeight/2;
     let bottom = (stockCenter[(index*2)+1])+stockHeight/2;
-    for(let i =0; i < values.length; i++){ 
+    for(let i =0; i < size; i++){ 
         array[i]= map(values[i], min *.5, max * 1.5, bottom, top);
     }
     return array;
@@ -111,7 +125,7 @@ function stockGraph(values, index){
 function windowResized() {
     resizeCanvas(windowWidth, windowHeight);
     getSizeFromNum();
-    for(let i = 0; i < numStocks; i ++){
+    for(let i = 0; i < layout.numStocks; i ++){
         this.graphPosition = stockGraph(this.values, this.index); //this almost works
     }
   }
@@ -169,7 +183,11 @@ function getSizeFromNum(){
 function playNotes(stockOsc, note) {
     if(playing){
         stockOsc.start();
-        stockOsc.freq(diatonic[note], 0);
+        if(layout.soundType == diatonic){
+            stockOsc.freq(diatonic[note], 0);
+        } else{
+            stockOsc.freq(chromatic[note], 0);
+        }
         stockOsc.amp(1, 0);
         stockOsc.amp(0, 0.25);
     }
@@ -205,15 +223,14 @@ class Stock {
         this.index = index;
         this.ticker = ticker; 
         this.width = stockWidth;
-        this.height = stockHeight
-        this.stockOsc = new p5.Oscillator('sine'); //try other types
+        this.height = stockHeight;
         this.stockArrayIndex = 0;
         this.xPosition = 0;
-        this.values = stockData.getColumn(this.index); //here is where the columns are read in
-        this.graphPosition = stockGraph(this.values, this.index);
-        this.graphNoises = getSoundFromValues(this.values);
+        this.values = stockData.getColumn(this.index);
         this.max = Math.max(...this.values);
         this.min = Math.min(...this.values);
+        this.size = this.values.length;
+        this.graphPosition = stockGraph(this.values, this.index, this.max, this.min, this.size);
     }
 
     display(){ 
@@ -227,8 +244,10 @@ class Stock {
         this.xPosition = this.graphPosition[this.stockArrayIndex]; 
         if(this.graphPosition[this.stockArrayIndex] > this.graphPosition[this.stockArrayIndex-1]){ 
             stroke(0,255,0);
+            fill(0,255,0);
         } else { // green for gain
             stroke(255,0,0);
+            fill(255,0,0);
         } //red for loss
         circle(stockCenter[this.index*2], this.xPosition, 5); 
         line(stockCenter[this.index*2],this.xPosition, stockCenter[this.index*2]-10, this.graphPosition[this.stockArrayIndex-1]); 
@@ -251,7 +270,8 @@ class Stock {
     }
 
     noise(){
-        //getSoundFromValues(this.values);
+        this.stockOsc = new p5.Oscillator(layout.soundWave);
+        this.graphNoises = getSoundFromValues(this.values);
         if(this.values[this.stockArrayIndex] == this.max & playing){
             trumpet.play();
         }//52 week high
