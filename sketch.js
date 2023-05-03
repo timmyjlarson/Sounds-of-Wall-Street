@@ -270,17 +270,19 @@ class Stock {
     }
 
     noise(){
-        this.stockOsc = new p5.Oscillator(layout.soundWave);
-        this.graphNoises = getSoundFromValues(this.values);
-        if(this.values[this.stockArrayIndex] == this.max & playing){
-            trumpet.play();
-        }//52 week high
-        if(this.values[this.stockArrayIndex] == this.min & playing){
-            kick.play();
-        }//52 week low
-        if(this.values[this.stockArrayIndex] > this.values[this.stockArrayIndex-1] && this.values[this.stockArrayIndex]> this.values[this.stockArrayIndex+1]){
-            //woo.play()
-        }//local high
-        playNotes(this.stockOsc, this.graphNoises[this.stockArrayIndex]);
+        if(frameCount%layout.numStocks == this.index){
+            this.stockOsc = new p5.Oscillator(layout.soundWave);
+            this.graphNoises = getSoundFromValues(this.values);
+            if(this.values[this.stockArrayIndex] == this.max & playing){
+                //trumpet.play();
+            }//52 week high
+            if(this.values[this.stockArrayIndex] == this.min & playing){
+                //kick.play();
+            }//52 week low
+            if(this.values[this.stockArrayIndex] > this.values[this.stockArrayIndex-1] && this.values[this.stockArrayIndex]> this.values[this.stockArrayIndex+1]){
+                //woo.play()
+            }//local high
+            playNotes(this.stockOsc, this.graphNoises[this.stockArrayIndex]);
+        }
     }
 }
