@@ -246,7 +246,9 @@ class Stock {
         rect(stockCenter[this.index*2], stockCenter[(this.index*2)+1], stockWidth,stockHeight)
         noStroke();
         strokeWeight(2);
-        this.stockArrayIndex = frameCount%this.graphPosition.length; 
+        //if(frameCount%floor(layout.numStocks) == this.index){
+            this.stockArrayIndex = frameCount%this.graphPosition.length;
+        //} //this is gross, but it does make it so the sound and movement syncs up
         this.xPosition = this.graphPosition[this.stockArrayIndex]; 
         if(this.graphPosition[this.stockArrayIndex] > this.graphPosition[this.stockArrayIndex-1]){ 
             stroke(0,255,0);
