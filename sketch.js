@@ -1,13 +1,4 @@
-/**
- * Ideas: access several stocks from an api, user can specifiy which ones they want to hear
- * each stock can relate to a different range of notes, custimiziable colors
- * stock lines are green when trending up and red when trending down, just for those segmenats
- * 
- * use dat gui for user controls
- * 
- * interface with excel spreadsheet
- */
-let waveform = ["sine", "sawtooth", "triangle", "square"]; //try adding func for selecting different wave forms?
+let waveform = ["sine", "sawtooth", "triangle", "square"]; 
 let diatonic = [/*27.50,30.87,32.70,36.71,41.20,43.65,49.00,55.00,61.74,65.41,73.42,82.41,87.31,98.00,110.00,*/
     123.47,130.81,146.83,164.81,174.61,196.00,220.00,246.94,261.63,293.66,329.63,349.23,392.00,440.00,493.88,
     523.25,587.33,659.25,698.46,783.99,880.00,987.77,1046.50]; //commented out lower values for more paletable sound
@@ -29,19 +20,21 @@ let layout = {      //include more for ui
     backgroundColor: [128, 128, 128],
     frameRate: 7,
     soundWave: 'sine',
-    soundType: 'diatonic'
+    soundType: 'diatonic',
+    soundEffects: false
 }
 let tickers = ['GME', 'AMC', 'GOOGL', 'AAPL', 'MSFT', 'AMZN', 'TSLA', 'NKE', 'META']; //currently hardcoded, may be able to fix?
 let gui = new dat.GUI();
 gui.close();
-gui.add(layout, 'numStocks', 1, 6, 1);
+gui.add(layout, 'numStocks').min(1).max(6).step(1).onChange(constructStocks);
 gui.add(layout, 'title');
 gui.add(layout, 'titleSize', 10, 100);
-gui.add(layout, 'frameRate', 1, 144);
+gui.add(layout, 'frameRate').min(1).max(144).step(1);
 gui.add(layout, 'soundWave', {sine: 'sine', sawtooth: 'sawtooth', triangle: 'triangle', square: 'square'}).onChange(setWaveType);
 gui.add(layout, 'soundType', {diatonic: 'diatonic', chromatic: 'chromatic'})
 gui.addColor(layout, 'accentColor');
 gui.addColor(layout, 'backgroundColor');
+gui.add(layout, 'soundEffects');
 
 
 //things that happen before the page can render, include file reading for stock data here
@@ -58,13 +51,8 @@ function preload(){
 
 function setup(){
     canvas = createCanvas(windowWidth, windowHeight);
-    yPosition = windowWidth/2
     canvas.mousePressed(startSound);
-    getSizeFromNum();
-    for(let i = 0; i < 9; i++) { //change 9 to be dynamic based on sheet size
-        let ticker = tickers[i];
-        stocks[i] = new Stock(ticker, i);
-    }
+    constructStocks();
     rectMode(CENTER);
 
     //sound stuff
@@ -143,40 +131,49 @@ function drawText(){
     textFont(sevenSegment);
     textAlign(CENTER);
     fill(layout.accentColor);
-    if(layout.numStocks<=3){
+    if(floor(layout.numStocks)<=3){
         text(layout.title, windowWidth/2, (windowHeight/6))
     } else{
         text(layout.title, windowWidth/2, (windowHeight/7)*4)
     }
 }
 
+function constructStocks(){
+    getSizeFromNum();
+    for(let i = 0; i < floor(layout.numStocks); i++) { //change 9 to be dynamic based on sheet size
+        let ticker = tickers[i];
+        stocks[i] = new Stock(ticker, i);
+    }
+    console.log("New stocks constructed: "+ layout.numStocks);
+}
+
 //used to find grid arrangement for stock array based on number of stocks
 function getSizeFromNum(){
-    if(layout.numStocks == 1){ 
+    if(floor(layout.numStocks) == 1){ 
         stockWidth = width/5;
         stockHeight = width/5;
         stockCenter = [windowWidth/2, windowHeight/2];
-    } else if(layout.numStocks == 2){
+    } else if(floor(layout.numStocks) == 2){
         stockWidth = width/5;
         stockHeight = width/5;
         stockCenter = [windowWidth/4, windowHeight/2, (windowWidth/4)*3, windowHeight/2];
-    } else if(layout.numStocks == 3){
+    } else if(floor(layout.numStocks) == 3){
         stockWidth = width/5;
         stockHeight = width/5;
         stockCenter = [windowWidth/6, windowHeight/2, (windowWidth/6)*3, windowHeight/2, 
                         (windowWidth/6)*5, windowHeight/2];
-    } else if(layout.numStocks == 4){
+    } else if(floor(layout.numStocks) == 4){
         stockWidth = width/7;
         stockHeight = width/7;
         stockCenter =[windowWidth/4, windowHeight/4, (windowWidth/4)*3, windowHeight/4,
         windowWidth/4, (windowHeight/4)*3, (windowWidth/4)*3, (windowHeight/4)*3];
-    } else if(layout.numStocks == 5){
+    } else if(floor(layout.numStocks) == 5){
         stockWidth = width/7;
         stockHeight = width/7;
         stockCenter =[windowWidth/6, windowHeight/4, (windowWidth/6)*3, windowHeight/4, 
         (windowWidth/6)*5, windowHeight/4, windowWidth/4, (windowHeight/4)*3, (windowWidth/4)*3, 
         (windowHeight/4)*3];
-    }else if(layout.numStocks == 6){
+    }else if(floor(layout.numStocks) == 6){
         stockWidth = width/7;
         stockHeight = width/7;
         stockCenter =[windowWidth/6, windowHeight/4, (windowWidth/6)*3, windowHeight/4, 
@@ -195,8 +192,8 @@ function playNotes(stockOsc, note) {
         } else{
             stockOsc.freq(chromatic[note], 0);
         }
-        stockOsc.amp(1, 0);
-        stockOsc.amp(0, 0.25);
+        stockOsc.amp(1, 0); //reduce this as well
+        stockOsc.amp(0, 0.25);//reduce to be faster
     }
 }
 
@@ -238,7 +235,7 @@ class Stock {
         this.min = Math.min(...this.values);
         this.size = this.values.length;
         this.graphPosition = stockGraph(this.values, this.index, this.max, this.min, this.size);
-
+        this.graphNoises = getSoundFromValues(this.values);
         this.stockOsc = new p5.Oscillator();
     }
 
@@ -279,18 +276,28 @@ class Stock {
     }
 
     noise(){
-        if(frameCount%floor(layout.numStocks) == this.index){ //wait lol this might be broken
-            //this.stockOsc = new p5.Oscillator(layout.soundWave);
-            this.graphNoises = getSoundFromValues(this.values);
-            if(this.values[this.stockArrayIndex] == this.max & playing){
-                //trumpet.play();
-            }//52 week high
-            if(this.values[this.stockArrayIndex] == this.min & playing){
-                //kick.play();
-            }//52 week low
-            if(this.values[this.stockArrayIndex] > this.values[this.stockArrayIndex-1] && this.values[this.stockArrayIndex]> this.values[this.stockArrayIndex+1]){
-                //woo.play()
-            }//local high
+        if(frameCount%floor(layout.numStocks) == this.index){ 
+            if(layout.soundEffects){
+                if(this.values[this.stockArrayIndex] == this.max & playing){
+                    airhorn.play();
+                }//52 week high
+                if(this.values[this.stockArrayIndex] == this.min & playing){
+                    flush.play();
+                }//52 week low
+                if(this.values[this.stockArrayIndex] > this.values[this.stockArrayIndex-1] && this.values[this.stockArrayIndex]> this.values[this.stockArrayIndex+1]){
+                    woo.play()
+                }//local high
+                
+            }
+
+            //prob not staying, just here to visualize music frames
+            if(this.graphPosition[this.stockArrayIndex] > this.graphPosition[this.stockArrayIndex-1]){
+                fill(0,255,0);
+            } else { // green for gain
+                fill(255,0,0);
+            } 
+            text(this.ticker, stockCenter[(this.index*2)], stockCenter[(this.index*2)+1]+(stockHeight*.65)); 
+            text("$" + this.values[this.stockArrayIndex], stockCenter[(this.index*2)], stockCenter[(this.index*2)+1]+(stockHeight*.81));
             playNotes(this.stockOsc, this.graphNoises[this.stockArrayIndex]);
         }
     }
