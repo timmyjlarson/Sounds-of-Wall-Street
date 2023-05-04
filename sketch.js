@@ -1,4 +1,3 @@
-let waveform = ["sine", "sawtooth", "triangle", "square"]; 
 let diatonic = [/*27.50,30.87,32.70,36.71,41.20,43.65,49.00,55.00,61.74,65.41,73.42,82.41,87.31,98.00,110.00,*/
     123.47,130.81,146.83,164.81,174.61,196.00,220.00,246.94,261.63,293.66,329.63,349.23,392.00,440.00,493.88,
     523.25,587.33,659.25,698.46,783.99,880.00,987.77,1046.50]; //commented out lower values for more paletable sound
@@ -78,8 +77,8 @@ function startSound() {
 }
 
 function setWaveType() {
-    for(Stock in stocks){
-        this.stockOsc.setType(layout.soundWave); // Set oscillator waveform based on user input
+    for(let i = 0; i < floor(layout.numStocks); i++){
+        stocks[i].stockOsc.setType(layout.soundWave); // Set oscillator waveform based on user input
     }
   }
   
