@@ -38,7 +38,7 @@ gui.add(layout, 'numStocks', 1, 6, 1);
 gui.add(layout, 'title');
 gui.add(layout, 'titleSize', 10, 100);
 gui.add(layout, 'frameRate', 1, 144);
-gui.add(layout, 'soundWave', {sine: 'sine', sawtooth: 'sawtooth', triangle: 'triangle', square: 'square'})
+gui.add(layout, 'soundWave', {sine: 'sine', sawtooth: 'sawtooth', triangle: 'triangle', square: 'square'}).onChange(setWaveType);
 gui.add(layout, 'soundType', {diatonic: 'diatonic', chromatic: 'chromatic'})
 gui.addColor(layout, 'accentColor');
 gui.addColor(layout, 'backgroundColor');
@@ -88,6 +88,13 @@ function draw(){
 function startSound() {
     playing = true;
 }
+
+function setWaveType() {
+    for(Stock in stocks){
+        this.stockOsc.setType(layout.soundWave); // Set oscillator waveform based on user input
+    }
+  }
+  
 
 //takes values and turns them into sounds using diatonic scale, possibility to add chromatic pending dat gui list knowledge
 function getSoundFromValues(values){
@@ -231,6 +238,8 @@ class Stock {
         this.min = Math.min(...this.values);
         this.size = this.values.length;
         this.graphPosition = stockGraph(this.values, this.index, this.max, this.min, this.size);
+
+        this.stockOsc = new p5.Oscillator();
     }
 
     display(){ 
@@ -270,8 +279,8 @@ class Stock {
     }
 
     noise(){
-        if(frameCount%layout.numStocks == this.index){
-            this.stockOsc = new p5.Oscillator(layout.soundWave);
+        if(frameCount%floor(layout.numStocks) == this.index){ //wait lol this might be broken
+            //this.stockOsc = new p5.Oscillator(layout.soundWave);
             this.graphNoises = getSoundFromValues(this.values);
             if(this.values[this.stockArrayIndex] == this.max & playing){
                 //trumpet.play();
