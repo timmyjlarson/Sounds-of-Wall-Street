@@ -12,7 +12,7 @@ let stockData = [[],[]];
 let stockCenter = [];
 let stockWidth, stockHeight;
 let layout = {      //include more for ui
-    numStocks: 6, //turn this into an int
+    numStocks: 3, //turn this into an int
     title: 'sounds of wallstreet',
     titleSize: 50,
     accentColor: [245, 238, 42],
@@ -44,6 +44,7 @@ function preload(){
     woo = loadSound('sounds/woo');
     kick = loadSound('sounds/technoKick');
     trumpet = loadSound('sounds/trumpet');
+    jpowell = loadSound('sounds/jpowell.m4a')
     sevenSegment = loadFont('fonts/Seven Segment.ttf');
     stockData = loadTable('stocks/stockData.csv', 'csv', 'header'); 
 }
@@ -62,6 +63,9 @@ function setup(){
 }
 
 function draw(){
+    if(frameCount== 15){
+        jpowell.play();
+    }
     frameRate(layout.frameRate);
     background(layout.backgroundColor);
     drawText();
@@ -118,10 +122,7 @@ function stockGraph(values, index, max, min, size){
 
 function windowResized() {
     resizeCanvas(windowWidth, windowHeight);
-    getSizeFromNum();
-    for(let i = 0; i < layout.numStocks; i ++){
-        this.graphPosition = stockGraph(this.values, this.index); //this almost works
-    }
+    constructStocks();
   }
 
 //here to avoid bloat in draw function
@@ -149,32 +150,32 @@ function constructStocks(){
 //used to find grid arrangement for stock array based on number of stocks
 function getSizeFromNum(){
     if(floor(layout.numStocks) == 1){ 
-        stockWidth = width/5;
-        stockHeight = width/5;
+        stockWidth = windowWidth/5;
+        stockHeight = windowWidth/5;
         stockCenter = [windowWidth/2, windowHeight/2];
     } else if(floor(layout.numStocks) == 2){
-        stockWidth = width/5;
-        stockHeight = width/5;
+        stockWidth = windowWidth/5;
+        stockHeight = windowWidth/5;
         stockCenter = [windowWidth/4, windowHeight/2, (windowWidth/4)*3, windowHeight/2];
     } else if(floor(layout.numStocks) == 3){
-        stockWidth = width/5;
-        stockHeight = width/5;
+        stockWidth = windowWidth/5;
+        stockHeight = windowWidth/5;
         stockCenter = [windowWidth/6, windowHeight/2, (windowWidth/6)*3, windowHeight/2, 
                         (windowWidth/6)*5, windowHeight/2];
     } else if(floor(layout.numStocks) == 4){
-        stockWidth = width/7;
-        stockHeight = width/7;
+        stockWidth = windowWidth/7;
+        stockHeight = windowWidth/7;
         stockCenter =[windowWidth/4, windowHeight/4, (windowWidth/4)*3, windowHeight/4,
         windowWidth/4, (windowHeight/4)*3, (windowWidth/4)*3, (windowHeight/4)*3];
     } else if(floor(layout.numStocks) == 5){
-        stockWidth = width/7;
-        stockHeight = width/7;
+        stockWidth = windowWidth/7;
+        stockHeight = windowWidth/7;
         stockCenter =[windowWidth/6, windowHeight/4, (windowWidth/6)*3, windowHeight/4, 
         (windowWidth/6)*5, windowHeight/4, windowWidth/4, (windowHeight/4)*3, (windowWidth/4)*3, 
         (windowHeight/4)*3];
     }else if(floor(layout.numStocks) == 6){
-        stockWidth = width/7;
-        stockHeight = width/7;
+        stockWidth = windowWidth/7;
+        stockHeight = windowWidth/7;
         stockCenter =[windowWidth/6, windowHeight/4, (windowWidth/6)*3, windowHeight/4, 
         (windowWidth/6)*5, windowHeight/4, windowWidth/6, (windowHeight/4) *3, (windowWidth/6)*3, 
         (windowHeight/4) *3, 
