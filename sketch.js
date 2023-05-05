@@ -6,8 +6,13 @@ let chromatic = [/*27.50,29.14,30.87,32.70,34.65,36.71,38.89,41.20,43.65,46.25,4
     185.00,196.00,207.65,220.00,233.08,246.94,261.63,277.18,293.66,311.13,329.63,349.23,369.99,392.00,415.30,440.00,
     466.16,493.88,523.25,554.37,587.33,622.25,659.25,698.46,739.99,783.99,830.61,880.00,932.33,987.77,1046.50];
 let bpm = 140;
+let numParticles = 100;
 let playing, reverb;
+let pos = 0;
+let sped = .004;
+let distance = 2000;
 let stocks = [];
+let dollars = [];
 let stockData = [[],[]];
 let stockCenter = [];
 let stockWidth, stockHeight;
@@ -20,7 +25,8 @@ let layout = {      //include more for ui
     frameRate: 7,
     soundWave: 'sine',
     soundType: 'diatonic',
-    soundEffects: false
+    soundEffects: false,
+    particles: true
 }
 let tickers = ['GME', 'AMC', 'GOOGL', 'AAPL', 'MSFT', 'AMZN', 'TSLA', 'NKE', 'META']; //currently hardcoded, may be able to fix?
 let gui = new dat.GUI();
@@ -34,7 +40,7 @@ gui.add(layout, 'soundType', {diatonic: 'diatonic', chromatic: 'chromatic'})
 gui.addColor(layout, 'accentColor');
 gui.addColor(layout, 'backgroundColor');
 gui.add(layout, 'soundEffects');
-
+gui.add(layout, 'particles');
 
 //things that happen before the page can render, include file reading for stock data here
 function preload(){
@@ -59,6 +65,13 @@ function setup(){
     beatDur = round(6000 / bpm / 8);
     reverb = new p5.Reverb();
     reverb.set(5,0,false);
+
+    //dollar sign particles?
+    for (i = 0; i < numParticles; i++) { 
+        let c = createVector(width/2,height/2);
+        let o = createVector(random(-distance,distance),random(-distance,distance));
+        dollars[i] = new DollarSign(c,o);
+    }
     
 }
 
@@ -68,6 +81,13 @@ function draw(){
     }
     frameRate(layout.frameRate);
     background(layout.backgroundColor);
+    if(layout.particles){
+        for (i = 0; i < numParticles; i++) { 
+            dollars[i].display();
+            dollars[i].move();
+        }
+        pos += sped;
+    }
     drawText();
     for(let i = 0; i<layout.numStocks; i++){
         stocks[i].display();
@@ -304,3 +324,20 @@ class Stock {
         }
     }
 }
+
+class DollarSign {
+    constructor(coords,offset) {
+      this.coords = coords;
+      this.offset = offset;
+    }
+    display() {
+      fill(0,255,0);
+      textSize(15);
+      textFont('Georgia');
+      text("$", this.coords.x,this.coords.y);
+    }
+    move() {
+      this.coords.x = map(noise(pos+this.offset.x),0,1,0,width);
+      this.coords.y = map(noise(pos+this.offset.y),0,1,0,height);
+    }
+  }
