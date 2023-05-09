@@ -145,7 +145,7 @@ function updateSelection(value, name){
         selectedCount = 0;
         for(const option in layout){
             for(let i = 0; i < tickers.length; i++){
-                if(option == name & option){
+                if(option == tickers[i] & option){
                     selectedCount++; 
                 }
             }
