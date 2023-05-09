@@ -8,9 +8,10 @@ let chromatic = [/*27.50,29.14,30.87,32.70,34.65,36.71,38.89,41.20,43.65,46.25,4
 let bpm = 140;
 let numParticles = 100;
 let playing, reverb;
+let selectedCount = 0;
 let pos = 0;
 let sped = .004;
-let distance = 2000;
+let distance = 1000;
 let stocks = [];
 let dollars = [];
 let stockData = [[],[]];
@@ -26,9 +27,18 @@ let layout = {      //include more for ui
     soundWave: 'sine',
     soundType: 'diatonic',
     soundEffects: false,
-    particles: true
+    particles: true,
+    GME: true,
+    AMC: true,
+    GOOGL: true,
+    AAPL: true,
+    MSFT: true,
+    AMZN: true,
+    TLSA: false,
+    NKE: false,
+    META: false
 }
-let tickers = ['GME', 'AMC', 'GOOGL', 'AAPL', 'MSFT', 'AMZN', 'TSLA', 'NKE', 'META']; //currently hardcoded, may be able to fix?
+let tickers = ['GME', 'AMC', 'GOOGL', 'AAPL', 'MSFT', 'AMZN', 'TSLA', 'NKE', 'META']; 
 let gui = new dat.GUI();
 gui.close();
 gui.add(layout, 'numStocks').min(1).max(6).step(1).onChange(constructStocks);
@@ -41,6 +51,14 @@ gui.addColor(layout, 'accentColor');
 gui.addColor(layout, 'backgroundColor');
 gui.add(layout, 'soundEffects');
 gui.add(layout, 'particles');
+gui.add(layout, "GME").onChange(updateSelection(layout.GME, 'GME')).name('GME');
+gui.add(layout, "AMC").onChange(updateSelection(layout.AMC, 'AMC')).name('AMC');
+gui.add(layout, "GOOGL").onChange(updateSelection(layout.GOOGL, 'GOOGL')).name('GOOGL');
+gui.add(layout, "AAPL").onChange(updateSelection(layout.AAPL, 'AAPL')).name('AAPL');
+gui.add(layout, "MSFT").onChange(updateSelection(layout.MSFT, 'MSFT')).name('MSFT');
+gui.add(layout, "AMZN").onChange(updateSelection(layout.AMZN, 'AMZN')).name('AMZN');
+gui.add(layout, "NKE").onChange(updateSelection(layout.NKE, 'NKE')).name('NKE');
+gui.add(layout, "META").onChange(updateSelection(layout.META, 'META')).name('META');
 
 //things that happen before the page can render, include file reading for stock data here
 function preload(){
@@ -57,6 +75,7 @@ function preload(){
 
 function setup(){
     canvas = createCanvas(windowWidth, windowHeight);
+    //distance = windowWidth;
     canvas.mousePressed(startSound);
     constructStocks();
     rectMode(CENTER);
@@ -68,7 +87,7 @@ function setup(){
 
     //dollar sign particles?
     for (i = 0; i < numParticles; i++) { 
-        let c = createVector(width/2,height/2);
+        let c = createVector(random(0, width),random(0, height));
         let o = createVector(random(-distance,distance),random(-distance,distance));
         dollars[i] = new DollarSign(c,o);
     }
@@ -77,7 +96,7 @@ function setup(){
 
 function draw(){
     if(frameCount== 15){
-        jpowell.play();
+        //jpowell.play();
     }
     frameRate(layout.frameRate);
     background(layout.backgroundColor);
@@ -104,7 +123,28 @@ function setWaveType() {
     for(let i = 0; i < floor(layout.numStocks); i++){
         stocks[i].stockOsc.setType(layout.soundWave); // Set oscillator waveform based on user input
     }
-  }
+}
+
+//this method handles rescricting the number of selections on the dropdown and
+//enabling selection support
+function updateSelection(value, name){
+    console.log(value, name);
+    console.log(selectedCount);
+    if (value) {
+        selectedCount++;
+        if (selectedCount >= 6) { //this means it needs to be set to false
+            for(const option in layout){
+                if(option == name){
+                    console.log(option);
+                    layout.name.setValue(false);
+                }
+            }
+            selectedCount--;
+        }
+    } else {
+        //selectedCount--;    
+    }
+}
   
 
 //takes values and turns them into sounds using diatonic scale, possibility to add chromatic pending dat gui list knowledge
@@ -257,6 +297,7 @@ class Stock {
         this.graphPosition = stockGraph(this.values, this.index, this.max, this.min, this.size);
         this.graphNoises = getSoundFromValues(this.values);
         this.stockOsc = new p5.Oscillator();
+        this.isSelected = true; //change to relate to layout
     }
 
     display(){ 
