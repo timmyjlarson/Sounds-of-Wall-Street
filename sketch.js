@@ -136,7 +136,8 @@ function updateSelection(value, name){
             for(const option in layout){
                 if(option == name){
                     console.log(option);
-                    layout.name.setValue(false);
+                    console.log("i break things");
+                    //layout.name.setValue(false);
                 }
             }
             selectedCount--;
