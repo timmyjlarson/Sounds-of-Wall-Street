@@ -140,10 +140,16 @@ function updateSelection(value, name){
                     //layout.name.setValue(false);
                 }
             }
-            selectedCount--;
         }
     } else {
-        //selectedCount--;    
+        selectedCount = 0;
+        for(const option in layout){
+            for(let i = 0; i < tickers.length; i++){
+                if(option == name & option){
+                    selectedCount++; 
+                }
+            }
+        }   
     }
 }
   
