@@ -51,14 +51,14 @@ gui.addColor(layout, 'accentColor');
 gui.addColor(layout, 'backgroundColor');
 gui.add(layout, 'soundEffects');
 gui.add(layout, 'particles');
-gui.add(layout, "GME").onChange(updateSelection(layout.GME, 'GME')).name('GME');
-gui.add(layout, "AMC").onChange(updateSelection(layout.AMC, 'AMC')).name('AMC');
-gui.add(layout, "GOOGL").onChange(updateSelection(layout.GOOGL, 'GOOGL')).name('GOOGL');
-gui.add(layout, "AAPL").onChange(updateSelection(layout.AAPL, 'AAPL')).name('AAPL');
-gui.add(layout, "MSFT").onChange(updateSelection(layout.MSFT, 'MSFT')).name('MSFT');
-gui.add(layout, "AMZN").onChange(updateSelection(layout.AMZN, 'AMZN')).name('AMZN');
-gui.add(layout, "NKE").onChange(updateSelection(layout.NKE, 'NKE')).name('NKE');
-gui.add(layout, "META").onChange(updateSelection(layout.META, 'META')).name('META');
+gui.add(layout, "GME").onChange(updateSelection(layout.GME, 'GME'));
+gui.add(layout, "AMC").onChange(updateSelection(layout.AMC, 'AMC'));
+gui.add(layout, "GOOGL").onChange(updateSelection(layout.GOOGL, 'GOOGL'));
+gui.add(layout, "AAPL").onChange(updateSelection(layout.AAPL, 'AAPL'));
+gui.add(layout, "MSFT").onChange(updateSelection(layout.MSFT, 'MSFT'));
+gui.add(layout, "AMZN").onChange(updateSelection(layout.AMZN, 'AMZN'));
+gui.add(layout, "NKE").onChange(updateSelection(layout.NKE, 'NKE'));
+gui.add(layout, "META").onChange(updateSelection(layout.META, 'META'));
 
 //things that happen before the page can render, include file reading for stock data here
 function preload(){
@@ -127,32 +127,59 @@ function setWaveType() {
 
 //this method handles rescricting the number of selections on the dropdown and
 //enabling selection support
-function updateSelection(value, name){
+function updateSelection(value, name){ //value is boolean that reflects if checked, name is a string equal to the name of the option
     console.log(value, name);
     console.log(selectedCount);
-    if (value) {
+    if (value) { // if it is checked, we gotta do this logic
         selectedCount++;
-        if (selectedCount >= 6) { //this means it needs to be set to false
-            for(const option in layout){
+        if (selectedCount >= 6) { //this means too many have been selected, seek out the current one and change it to false
+            for(const option in layout){ //seeking
                 if(option == name){
-                    console.log(option);
-                    console.log("i break things");
+                    console.log(option); //we can tell this works because we get here
+                    console.log("i break things"); //this needs to be changed to a reassignment to the gui value to make it false
                     //layout.name.setValue(false);
+                    let guiValue = getValueFromGUI(name);
+                    console.log("gui value " + guiValue);
                 }
             }
         }
-    } else {
+    } else { //here we gotta count how many options are checked to reverify the right amount are counted
         selectedCount = 0;
         for(const option in layout){
             for(let i = 0; i < tickers.length; i++){
-                if(option == tickers[i] & option){
+                if(option == tickers[i]){
                     selectedCount++; 
+                    console.log(option, tickers[i])
+                    if(layout.option){
+                        console.log(layout.option);
+                    }
                 }
             }
         }   
     }
 }
   
+function getValueFromGUI(name){
+    if(name == 'GME'){
+        return layout.GME;
+    } else if(name == 'AMZN'){
+        return layout.AMZN;
+    } else if(name == 'AMC'){
+        return layout.AMC;
+    }else if(name == 'AAPL'){
+        return layout.AAPL;
+    }else if(name == 'GOOGL'){
+        return layout.GOOGL;
+    }else if(name == 'MSFT'){
+        return layout.MSFT;
+    }else if(name == 'NKE'){
+        return layout.NKE;
+    }else if(name == 'META'){
+        return layout.META;
+    }else{
+        return false;
+    }
+}
 
 //takes values and turns them into sounds using diatonic scale, possibility to add chromatic pending dat gui list knowledge
 function getSoundFromValues(values){
@@ -304,71 +331,75 @@ class Stock {
         this.graphPosition = stockGraph(this.values, this.index, this.max, this.min, this.size);
         this.graphNoises = getSoundFromValues(this.values);
         this.stockOsc = new p5.Oscillator();
-        this.isSelected = true; //change to relate to layout
+        this.isSelected = getValueFromGUI(this.ticker);
     }
 
     display(){ 
-        fill(0)
-        stroke(layout.accentColor);
-        strokeWeight(4);
-        rect(stockCenter[this.index*2], stockCenter[(this.index*2)+1], stockWidth,stockHeight)
-        noStroke();
-        strokeWeight(2);
-        //if(frameCount%floor(layout.numStocks) == this.index){
-            this.stockArrayIndex = frameCount%this.graphPosition.length;
-        //} //this is gross, but it does make it so the sound and movement syncs up
-        this.xPosition = this.graphPosition[this.stockArrayIndex]; 
-        if(this.graphPosition[this.stockArrayIndex] > this.graphPosition[this.stockArrayIndex-1]){ 
-            stroke(0,255,0);
-            fill(0,255,0);
-        } else { // green for gain
-            stroke(255,0,0);
-            fill(255,0,0);
-        } //red for loss
-        circle(stockCenter[this.index*2], this.xPosition, 5); 
-        line(stockCenter[this.index*2],this.xPosition, stockCenter[this.index*2]-10, this.graphPosition[this.stockArrayIndex-1]); 
-        let endLine = floor(stockWidth/10)/2;
-        for(let i = 2; i < endLine; i++){
-            if(this.graphPosition[this.stockArrayIndex-i] > this.graphPosition[this.stockArrayIndex-(i-1)]){ 
+        if(this.isSelected){
+            fill(0)
+            stroke(layout.accentColor);
+            strokeWeight(4);
+            rect(stockCenter[this.index*2], stockCenter[(this.index*2)+1], stockWidth,stockHeight)
+            noStroke();
+            strokeWeight(2);
+            //if(frameCount%floor(layout.numStocks) == this.index){
+                this.stockArrayIndex = frameCount%this.graphPosition.length;
+            //} //this is gross, but it does make it so the sound and movement syncs up
+            this.xPosition = this.graphPosition[this.stockArrayIndex]; 
+            if(this.graphPosition[this.stockArrayIndex] > this.graphPosition[this.stockArrayIndex-1]){ 
                 stroke(0,255,0);
-            } else {
+                fill(0,255,0);
+            } else { // green for gain
                 stroke(255,0,0);
-            } //stock center index *2 is the x axis, i -1 *10 gets offset to left   gets graph pos for prev using mod math to stay in bounds
-            line(stockCenter[this.index*2]-((i-1)*10),this.graphPosition[(this.stockArrayIndex-(i-1))%this.graphPosition.length], stockCenter[this.index*2]-(i*10), this.graphPosition[(this.stockArrayIndex-i)%this.graphPosition.length]);
-        } //add mod math here to make sure the loop back is more fluid
-        noStroke();
-        textSize(40);
-        textFont(sevenSegment);
-        textAlign(CENTER);
-        fill(layout.accentColor); 
-        text(this.ticker, stockCenter[(this.index*2)], stockCenter[(this.index*2)+1]+(stockHeight*.65)); 
-        text("$" + this.values[this.stockArrayIndex], stockCenter[(this.index*2)], stockCenter[(this.index*2)+1]+(stockHeight*.81)); 
+                fill(255,0,0);
+            } //red for loss
+            circle(stockCenter[this.index*2], this.xPosition, 5); 
+            line(stockCenter[this.index*2],this.xPosition, stockCenter[this.index*2]-10, this.graphPosition[this.stockArrayIndex-1]); 
+            let endLine = floor(stockWidth/10)/2;
+            for(let i = 2; i < endLine; i++){
+                if(this.graphPosition[this.stockArrayIndex-i] > this.graphPosition[this.stockArrayIndex-(i-1)]){ 
+                    stroke(0,255,0);
+                } else {
+                    stroke(255,0,0);
+                } //stock center index *2 is the x axis, i -1 *10 gets offset to left   gets graph pos for prev using mod math to stay in bounds
+                line(stockCenter[this.index*2]-((i-1)*10),this.graphPosition[(this.stockArrayIndex-(i-1))%this.graphPosition.length], stockCenter[this.index*2]-(i*10), this.graphPosition[(this.stockArrayIndex-i)%this.graphPosition.length]);
+            } //add mod math here to make sure the loop back is more fluid
+            noStroke();
+            textSize(40);
+            textFont(sevenSegment);
+            textAlign(CENTER);
+            fill(layout.accentColor); 
+            text(this.ticker, stockCenter[(this.index*2)], stockCenter[(this.index*2)+1]+(stockHeight*.65)); 
+            text("$" + this.values[this.stockArrayIndex], stockCenter[(this.index*2)], stockCenter[(this.index*2)+1]+(stockHeight*.81)); 
+        }
     }
 
     noise(){
-        if(frameCount%floor(layout.numStocks) == this.index){ 
-            if(layout.soundEffects){
-                if(this.values[this.stockArrayIndex] == this.max & playing){
-                    airhorn.play();
-                }//52 week high
-                if(this.values[this.stockArrayIndex] == this.min & playing){
-                    flush.play();
-                }//52 week low
-                if(this.values[this.stockArrayIndex] > this.values[this.stockArrayIndex-1] && this.values[this.stockArrayIndex]> this.values[this.stockArrayIndex+1]){
-                    woo.play()
-                }//local high
-                
-            }
+        if(this.isSelected){
+            if(frameCount%floor(layout.numStocks) == this.index){ 
+                if(layout.soundEffects){
+                    if(this.values[this.stockArrayIndex] == this.max & playing){
+                        airhorn.play();
+                    }//52 week high
+                    if(this.values[this.stockArrayIndex] == this.min & playing){
+                        flush.play();
+                    }//52 week low
+                    if(this.values[this.stockArrayIndex] > this.values[this.stockArrayIndex-1] && this.values[this.stockArrayIndex]> this.values[this.stockArrayIndex+1]){
+                        woo.play()
+                    }//local high
+                    
+                }
 
-            //prob not staying, just here to visualize music frames
-            if(this.graphPosition[this.stockArrayIndex] > this.graphPosition[this.stockArrayIndex-1]){
-                fill(0,255,0);
-            } else { // green for gain
-                fill(255,0,0);
-            } 
-            text(this.ticker, stockCenter[(this.index*2)], stockCenter[(this.index*2)+1]+(stockHeight*.65)); 
-            text("$" + this.values[this.stockArrayIndex], stockCenter[(this.index*2)], stockCenter[(this.index*2)+1]+(stockHeight*.81));
-            playNotes(this.stockOsc, this.graphNoises[this.stockArrayIndex]);
+                //prob not staying, just here to visualize music frames
+                if(this.graphPosition[this.stockArrayIndex] > this.graphPosition[this.stockArrayIndex-1]){
+                    fill(0,255,0);
+                } else { // green for gain
+                    fill(255,0,0);
+                } 
+                text(this.ticker, stockCenter[(this.index*2)], stockCenter[(this.index*2)+1]+(stockHeight*.65)); 
+                text("$" + this.values[this.stockArrayIndex], stockCenter[(this.index*2)], stockCenter[(this.index*2)+1]+(stockHeight*.81));
+                playNotes(this.stockOsc, this.graphNoises[this.stockArrayIndex]);
+            }
         }
     }
 }
