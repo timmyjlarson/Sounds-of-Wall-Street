@@ -128,18 +128,15 @@ function setWaveType() {
 //this method handles rescricting the number of selections on the dropdown and
 //enabling selection support
 function updateSelection(value, name){ //value is boolean that reflects if checked, name is a string equal to the name of the option
-    console.log(value, name);
-    console.log(selectedCount);
+    //console.log(value, name);    
     if (value) { // if it is checked, we gotta do this logic
         selectedCount++;
-        if (selectedCount >= 6) { //this means too many have been selected, seek out the current one and change it to false
+        if (selectedCount > 6) { //this means too many have been selected, seek out the current one and change it to false
             for(const option in layout){ //seeking
                 if(option == name){
                     console.log(option); //we can tell this works because we get here
-                    console.log("i break things"); //this needs to be changed to a reassignment to the gui value to make it false
+                    //this needs to be changed to a reassignment to the gui value to make it false
                     //layout.name.setValue(false);
-                    let guiValue = getValueFromGUI(name);
-                    console.log("gui value " + guiValue);
                 }
             }
         }
@@ -148,15 +145,17 @@ function updateSelection(value, name){ //value is boolean that reflects if check
         for(const option in layout){
             for(let i = 0; i < tickers.length; i++){
                 if(option == tickers[i]){
-                    selectedCount++; 
-                    console.log(option, tickers[i])
-                    if(layout.option){
-                        console.log(layout.option);
+                    //selectedCount++; 
+                    //console.log("else count matches: " + option, tickers[i])
+                    //console.log("layout.option " + option); //how to access boolean value?????
+                    if(getValueFromGUI(tickers[i])){
+                        selectedCount++;
                     }
                 }
             }
         }   
     }
+    //console.log(selectedCount);
 }
   
 function getValueFromGUI(name){
@@ -233,10 +232,20 @@ function drawText(){
 }
 
 function constructStocks(){
+    for(let i = 0; i < stocks.length; i++){
+        stocks.pop();
+    }
     getSizeFromNum();
-    for(let i = 0; i < floor(layout.numStocks); i++) { //change 9 to be dynamic based on sheet size
+    let index = 0;
+    for(let i = 0; i < tickers.length; i++) { 
         let ticker = tickers[i];
-        stocks[i] = new Stock(ticker, i);
+        console.log(ticker, getValueFromGUI(ticker));
+        if(getValueFromGUI(ticker) === true){
+            console.log("how the fuck does it get in here");
+            console.log(getValueFromGUI(ticker))
+            stocks[i] = new Stock(ticker, index);
+            index++;
+        }
     }
     console.log("New stocks constructed: "+ layout.numStocks);
 }
