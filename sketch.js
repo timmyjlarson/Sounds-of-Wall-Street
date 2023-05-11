@@ -8,7 +8,7 @@ let chromatic = [/*27.50,29.14,30.87,32.70,34.65,36.71,38.89,41.20,43.65,46.25,4
 let bpm = 140;
 let numParticles = 100;
 let playing, reverb;
-let selectedCount = 0;
+//let selectedCount = 0;
 let pos = 0;
 let sped = .004;
 let distance = 1000;
@@ -28,17 +28,19 @@ let layout = {      //include more for ui
     soundType: 'diatonic',
     soundEffects: false,
     particles: true,
+    /*
     GME: true,
     AMC: true,
     GOOGL: true,
     AAPL: true,
     MSFT: true,
     AMZN: true,
-    TLSA: false,
-    NKE: false,
-    META: false
+    TSLA: true,
+    NKE: true,
+    META: true
+    */
 }
-let tickers = ['GME', 'AMC', 'GOOGL', 'AAPL', 'MSFT', 'AMZN', 'TSLA', 'NKE', 'META']; 
+let tickers = ['GOOG', 'BBY', 'GOOGL', 'TSLA', 'MSFT', 'AMZN']; 
 let gui = new dat.GUI();
 gui.close();
 gui.add(layout, 'numStocks').min(1).max(6).step(1).onChange(constructStocks);
@@ -51,14 +53,17 @@ gui.addColor(layout, 'accentColor');
 gui.addColor(layout, 'backgroundColor');
 gui.add(layout, 'soundEffects');
 gui.add(layout, 'particles');
-gui.add(layout, "GME").onChange(updateSelection(layout.GME, 'GME'));
-gui.add(layout, "AMC").onChange(updateSelection(layout.AMC, 'AMC'));
-gui.add(layout, "GOOGL").onChange(updateSelection(layout.GOOGL, 'GOOGL'));
-gui.add(layout, "AAPL").onChange(updateSelection(layout.AAPL, 'AAPL'));
-gui.add(layout, "MSFT").onChange(updateSelection(layout.MSFT, 'MSFT'));
-gui.add(layout, "AMZN").onChange(updateSelection(layout.AMZN, 'AMZN'));
-gui.add(layout, "NKE").onChange(updateSelection(layout.NKE, 'NKE'));
-gui.add(layout, "META").onChange(updateSelection(layout.META, 'META'));
+/*
+let GME = gui.add(layout, "GME").onChange(updateSelection(layout.GME, 'GME'));
+let AMC = gui.add(layout, "AMC").onChange(updateSelection(layout.AMC, 'AMC'));
+let GOOGL = gui.add(layout, "GOOGL").onChange(updateSelection(layout.GOOGL, 'GOOGL'));
+let AAPL = gui.add(layout, "AAPL").onChange(updateSelection(layout.AAPL, 'AAPL'));
+let MSFT = gui.add(layout, "MSFT").onChange(updateSelection(layout.MSFT, 'MSFT'));
+let AMZN = gui.add(layout, "AMZN").onChange(updateSelection(layout.AMZN, 'AMZN'));
+let NKE = gui.add(layout, "NKE").onChange(updateSelection(layout.NKE, 'NKE'));
+let TSLA = gui.add(layout, "TSLA").onChange(updateSelection(layout.TSLA, 'TSLA'));
+let META = gui.add(layout, "META").onChange(updateSelection(layout.META, 'META'));
+*/
 
 //things that happen before the page can render, include file reading for stock data here
 function preload(){
@@ -95,9 +100,6 @@ function setup(){
 }
 
 function draw(){
-    if(frameCount== 15){
-        //jpowell.play();
-    }
     frameRate(layout.frameRate);
     background(layout.backgroundColor);
     if(layout.particles){
@@ -125,18 +127,23 @@ function setWaveType() {
     }
 }
 
+
+//this whole function is kinda shit show of mystery fuckery, doesn't work and i don't know why
+//honestly not sure I care why it doesn't work, probably better ways to do this
 //this method handles rescricting the number of selections on the dropdown and
 //enabling selection support
-function updateSelection(value, name){ //value is boolean that reflects if checked, name is a string equal to the name of the option
+/*function updateSelection(value, name){ //value is boolean that reflects if checked, name is a string equal to the name of the option
     //console.log(value, name);    
     if (value) { // if it is checked, we gotta do this logic
         selectedCount++;
-        if (selectedCount > 6) { //this means too many have been selected, seek out the current one and change it to false
+        if (selectedCount >= 6) { //this means too many have been selected, seek out the current one and change it to false
             for(const option in layout){ //seeking
                 if(option == name){
-                    console.log(option); //we can tell this works because we get here
+                    //console.log("do we get here"); //we can tell this works because we get here
                     //this needs to be changed to a reassignment to the gui value to make it false
                     //layout.name.setValue(false);
+                    //layout.NKE = !layout.NKE;
+                    //NKE.updateDisplay();
                 }
             }
         }
@@ -156,9 +163,9 @@ function updateSelection(value, name){ //value is boolean that reflects if check
         }   
     }
     //console.log(selectedCount);
-}
+}*/
   
-function getValueFromGUI(name){
+/*function getValueFromGUI(name){
     if(name == 'GME'){
         return layout.GME;
     } else if(name == 'AMZN'){
@@ -175,10 +182,12 @@ function getValueFromGUI(name){
         return layout.NKE;
     }else if(name == 'META'){
         return layout.META;
+    }else if(name == 'TSLA'){
+        return layout.TSLA;
     }else{
         return false;
     }
-}
+}*/
 
 //takes values and turns them into sounds using diatonic scale, possibility to add chromatic pending dat gui list knowledge
 function getSoundFromValues(values){
@@ -231,23 +240,25 @@ function drawText(){
     }
 }
 
+
+//this is the real meat and potatoes of my issues
+//should reconstruct stocks based on if they are selected or not
+//currently kinda just does whatever the fuck it wants
 function constructStocks(){
-    for(let i = 0; i < stocks.length; i++){
-        stocks.pop();
-    }
+    console.log(stocks);
     getSizeFromNum();
     let index = 0;
     for(let i = 0; i < tickers.length; i++) { 
         let ticker = tickers[i];
-        console.log(ticker, getValueFromGUI(ticker));
-        if(getValueFromGUI(ticker) === true){
-            console.log("how the fuck does it get in here");
-            console.log(getValueFromGUI(ticker))
+        //console.log(ticker, getValueFromGUI(ticker));
+        //if(getValueFromGUI(ticker) === true){
+            //console.log("these should be the only new stocks");
+            //console.log(getValueFromGUI(ticker))
             stocks[i] = new Stock(ticker, index);
             index++;
-        }
+        //}
     }
-    console.log("New stocks constructed: "+ layout.numStocks);
+    //console.log("New stocks constructed: "+ layout.numStocks);
 }
 
 //used to find grid arrangement for stock array based on number of stocks
@@ -305,6 +316,9 @@ function keyPressed() {
     if (key === ' ') {
       playing = !playing;
     }
+    if(key === 'j'){
+        jpowell.play();
+    }
     if (key === 'r') {  //can't tell if this works or not
       rev = !rev;
       if (rev) {
@@ -340,11 +354,11 @@ class Stock {
         this.graphPosition = stockGraph(this.values, this.index, this.max, this.min, this.size);
         this.graphNoises = getSoundFromValues(this.values);
         this.stockOsc = new p5.Oscillator();
-        this.isSelected = getValueFromGUI(this.ticker);
+        //this.isSelected = getValueFromGUI(this.ticker);
     }
 
     display(){ 
-        if(this.isSelected){
+        //if(this.isSelected == true){
             fill(0)
             stroke(layout.accentColor);
             strokeWeight(4);
@@ -380,11 +394,11 @@ class Stock {
             fill(layout.accentColor); 
             text(this.ticker, stockCenter[(this.index*2)], stockCenter[(this.index*2)+1]+(stockHeight*.65)); 
             text("$" + this.values[this.stockArrayIndex], stockCenter[(this.index*2)], stockCenter[(this.index*2)+1]+(stockHeight*.81)); 
-        }
+        //}
     }
 
     noise(){
-        if(this.isSelected){
+        //if(this.isSelected == true){
             if(frameCount%floor(layout.numStocks) == this.index){ 
                 if(layout.soundEffects){
                     if(this.values[this.stockArrayIndex] == this.max & playing){
@@ -395,21 +409,18 @@ class Stock {
                     }//52 week low
                     if(this.values[this.stockArrayIndex] > this.values[this.stockArrayIndex-1] && this.values[this.stockArrayIndex]> this.values[this.stockArrayIndex+1]){
                         woo.play()
-                    }//local high
-                    
+                    }//local high    
                 }
-
-                //prob not staying, just here to visualize music frames
                 if(this.graphPosition[this.stockArrayIndex] > this.graphPosition[this.stockArrayIndex-1]){
-                    fill(0,255,0);
+                    fill(0,255,0); 
                 } else { // green for gain
                     fill(255,0,0);
-                } 
+                }  //red for loss
                 text(this.ticker, stockCenter[(this.index*2)], stockCenter[(this.index*2)+1]+(stockHeight*.65)); 
                 text("$" + this.values[this.stockArrayIndex], stockCenter[(this.index*2)], stockCenter[(this.index*2)+1]+(stockHeight*.81));
                 playNotes(this.stockOsc, this.graphNoises[this.stockArrayIndex]);
             }
-        }
+        //}
     }
 }
 
@@ -425,7 +436,7 @@ class DollarSign {
       text("$", this.coords.x,this.coords.y);
     }
     move() {
-      this.coords.x = map(noise(pos+this.offset.x),0,1,0,width);
-      this.coords.y = map(noise(pos+this.offset.y),0,1,0,height);
+      this.coords.x = map(noise(pos+this.offset.x),0,1,-width,2*width);
+      this.coords.y = map(noise(pos+this.offset.y),0,1,-height,2*height);
     }
   }
