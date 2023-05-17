@@ -40,7 +40,7 @@ let layout = {      //include more for ui
     META: true
     */
 }
-let tickers = ['GOOG', 'BBY', 'GOOGL', 'TSLA', 'MSFT', 'AMZN']; 
+let tickers = ['GME', 'AMC', 'GOOGL', 'TSLA', 'MSFT', 'AMZN']; 
 let gui = new dat.GUI();
 gui.close();
 gui.add(layout, 'numStocks').min(1).max(6).step(1).onChange(constructStocks);
@@ -316,7 +316,7 @@ function keyPressed() {
     if (key === ' ') {
       playing = !playing;
     }
-    if(key === 'j'){
+    if(key === 'j'){ //easter egg for my dad
         jpowell.play();
     }
     if (key === 'r') {  //can't tell if this works or not
