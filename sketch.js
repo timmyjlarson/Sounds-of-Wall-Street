@@ -24,7 +24,7 @@ let layout = {      //include more for ui
     accentColor: [245, 238, 42],
     backgroundColor: [128, 128, 128],
     frameRate: 7,
-    soundWave: 'sine',
+    soundWave: 'sawtooth',
     soundType: 'diatonic',
     soundEffects: false,
     particles: true,
@@ -353,7 +353,7 @@ class Stock {
         this.size = this.values.length;
         this.graphPosition = stockGraph(this.values, this.index, this.max, this.min, this.size);
         this.graphNoises = getSoundFromValues(this.values);
-        this.stockOsc = new p5.Oscillator();
+        this.stockOsc = new p5.Oscillator(layout.soundWave);
         //this.isSelected = getValueFromGUI(this.ticker);
     }
 
